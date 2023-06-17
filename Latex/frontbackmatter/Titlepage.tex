@@ -1,0 +1,66 @@
+%*******************************************************
+% Titlepage
+%*******************************************************
+%%%
+%%% title page (german)
+%%%
+\thispagestyle{empty}
+\pdfbookmark[0]{Titelblatt}{title}
+\begin{titlepage}
+
+  % If printed on two sides, center the title page
+  \condTWOSIDE{\changetext{}{19mm}{}{19mm}{}}
+
+  \vspace{1cm}
+  \begin{center}
+    \includegraphics[width=7.7cm]{gfx/eit_logo} \\ 
+  \end{center}
+
+  \vfill
+  \vfill
+
+  \begin{center}
+    \vspace{0.4cm}
+    \LARGE Masterthesis
+  \end{center}
+
+  \vfill
+  \vfill
+
+  \begin{center}
+    \LARGE \textbf{\myTitle}
+  \end{center} 
+
+  \vfill
+  \vfill
+
+  \begin{center}
+    \Large Thesis for obtaining the academic degree\\
+    \vspace{0.3cm}
+    \Large \myDegree
+  \end{center}
+
+  \vfill
+
+  \begin{center}
+    \Large submitted by\\
+    \vspace{0.3cm}
+    \Large \textbf{\myName}\\
+    \vspace{0.3cm}
+    \normalsize Matrikelnummer: \myId
+  \end{center}
+
+  \vfill
+  \vfill
+
+  \begin{center}
+    \begin{tabular}{lll}
+      First Supervisor    & : & \myProf \\
+      Second Supervisor & : & \myOtherProf
+    \end{tabular}
+  \end{center} 
+
+  % If printed on two sides, center the title page
+  \condTWOSIDE{\changetext{}{-19mm}{}{-19mm}{}}
+
+\end{titlepage}

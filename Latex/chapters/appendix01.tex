@@ -1,0 +1,75 @@
+%************************************************
+\chapter{Examples of Conditioning and DRBG}\label{ch:classicthesis}
+%************************************************
+%
+% Section: Hash based DRBG
+%
+\section{Output Entropy of Condtioning components}
+\label{A:1:1}
+Final entropy in the output$(h_{out})$ of the conditioning function (used to improve entropy rate) can be calculated by using the algorithm provided by NIST SP800-90C. The c-code of the algorithm is mentioned below. With the $n_{in}$ being the input bit length, $n_{out}$ being the output bit length, $h_{in}$ being input entropy bits and $nw$ being the narrowest width of the conditioning function, the final entropy bits can be seen in the output \cite{SP90B-2018}.
+
+\begin{lstlisting}
+long double output_entropy(int nin, int nout, int nw, int hin)
+{
+long double phigh = pow(2, -1*hin);
+long double plow = (1 - phigh)/(pow(2,( nin - 1)));
+int n = min(nout, nw);
+long double Psi = (pow(2,(nin - n)))*plow + phigh;
+long double U = (pow(2,(nin - n))) + sqrt(2*n*(pow(2,(nin - n)))*log(2));
+long double omega = U*plow;
+long double maximum = max(omega, Psi);
+long double output = -1*log2(maximum);
+return output;
+}
+
+\end{lstlisting}
+
+From the algorithm mentioned above, it can be derived that the conditioned function increases the entropy rate. The conditioning output is considered full-entropy if the input entropy bits provided are at least the required output bits.
+
+\section{Hash based DRBG}
+\label{A:1:2}
+We discussed generic DRBG in section \ref{sec:fundamentals:drbg}. In this section, we will talk about a Hash-based DRBG function as an illustration of a cryptographically safe DRBG. Figure \ref{fig:2:16} shows the hash derivation function's operational flow \cite{SP90A-2015}.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Hash_df}
+	\caption{Hash Derivation Function \cite{SP90A-2015}}
+	\label{fig:2:16}
+\end{figure}
+
+Hash\_based DRBG instantiation and reseeding are identical to generic DRBG. However, an extra step is added to create a constant that will be utilized to create the internal state during the subsequent iterations of the generation process. The instantiation of Hash\_based DRBG is shown in Figure \ref{fig:2:17}, and its reseeding is shown in \ref{fig:2:18}.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.45\textwidth]{gfx/diagrams/Instantiating_hash_drbg}
+	\caption{Instantiation in Hash\_based DRBG \cite{SP90A-2015}}
+	\label{fig:2:17}
+\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.45\textwidth]{gfx/diagrams/reseeding_hash_drbg}
+	\caption{Reseeding Hash\_based DRBG \cite{SP90A-2015}}
+	\label{fig:2:18}
+\end{figure}
+
+In hash\_based DRBG, random integers are created as shown in Figure \ref{fig:2:19}. Hash\_gen, a function used in the generation process, is comparable to Hash\_df. Figure \ref{fig:2:20} illustrates this function.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.1\textwidth]{gfx/diagrams/Hash_based_DRBG_Generation}
+	\caption{Generation of random numbers in Hash\_based DRBG \cite{SP90A-2015}}
+	\label{fig:2:19}
+\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Hash_gen}
+	\caption{Hash\_gen Algorithm \cite{SP90A-2015}}
+	\label{fig:2:20}
+\end{figure}
+
+
+
+
+%*****************************************
+%*****************************************
+%*****************************************
+%*****************************************
+%*****************************************

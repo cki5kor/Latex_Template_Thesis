@@ -1,0 +1,502 @@
+\chapter{Fundamentals}
+\label{ch:fundamentals}
+
+In this study we will be concentrating on the random numbers and generation of random numbers. Hence, we need to understand some of the basic components and terminologies before we get deeper into the topic.
+
+%
+% Section: Entropy
+%
+\section{Entropy}
+\label{sec:fundamentals:entropy}
+
+As we have seen in the Chapter \ref{ch:intro}, measure of the randomness is known as entropy. We will try to understand the entropy in detail.
+
+To understand the entropy in an intuitive way, let us consider a random variable $X$. Now we will try to define entropy in terms of $X$.
+
+\begin{enumerate}
+	\item If consider $X$ in terms of bits, the amount of randomness in $X$ can be understood as entropy.
+	\item In other terms, to save a draw from $X$ with compression, average amount of bits required is known as entropy.
+	\item Average amount of Yes/No question required to be answered to guess the number $X$ can be defined as entropy.
+\end{enumerate}
+
+Considering above mentioned intuitive definitions, entropy can be represented as average amount of Information content in X. 
+
+\begin{equation}
+\label{eq:2:1}
+H(X) = \sum_{x \in range(X)}  avg(I_{X}(x))
+\end{equation}
+
+Where, $X$ is a message or random variable, $I_{X}(x)$ is the information content in $X$ and $H(X)$ is the entropy of variable $X$.
+
+%
+%Section: Entropy Types
+%
+\section{Types of Measurements of Entropy} 
+\label{sec:fundamentals:types}
+
+In an "ideal world," all the intuitive definitions provided in section \ref{sec:fundamentals:entropy} hold true. Nevertheless, in a biased environment where the distribution of event occurrence is not uniform. Entropy cannot just be thought of as an average measure of freshness or information content. As a result, there exist numerous entropy measurement options. It is preferable to employ the appropriate type of entropy depending on the application for which it is being considered.
+
+%
+% Sub-Section: Shannon Entropy
+%
+\subsection{Shannon Entropy}
+\label{subsec:fundamentals:types:shannon}
+
+Let's start with Shannon entropy as we have already examined entropy as an average of information content. In 1948, Claude Shannon used mathematics to define the information entropy as,
+\begin{equation*}
+H(X) = \sum_{x \in range(X)} P_{X}(x)*\log_{2}\frac{1}{P_{X}(x)} 
+\end{equation*}
+\begin{equation}\label{eq:2:2}
+H(X) = {-}\sum_{x \in range(X)} P_{X}(x).\log_{2}P_{X}(x) 
+\end{equation}
+
+This expression is known as Shannon’s entropy. This gives the average unpredictability in the random number $X$.\\
+
+\underline{Intuitive Illustration:}\\\\
+Consider set $A = \{1,1,1,1\}$, $B = \{1,1,1,0,1\}$ and $C = \{1,0,1,0,1,0\}$,\\\\
+Probability of picking 1 and 0 in all the sets are correspondingly:\\
+
+$P_{A}(1) = 4/4 = 1,\ P_{A}(0) = 0/4 = 0$\\
+ 
+$P_{B}(1) = 4/5 = 0.8,\ P_{B}(0) = 1/5 = 0.1$\\
+
+$P_{C}(1) = 3/6 = 0.5,\ P_{C}(0) = 3/6 = 0.5$\\\\
+Let's now think about the surprising aspect of choosing 1 and 0 in every set:\\
+Given that we know set A includes all 1, choosing 1 from it is not at all surprising.\\
+Selecting 1 in set B is less shocking because it has a larger probability of happening. Picking 0 in set B, though, is more unexpected.\\
+Given that set C has a 0.5 probability of both 1 and 0, choosing 1 and 0 there is equally unexpected.\\\\
+Considering the probabilities and the surprising factors for picking the values out of all the three sets, we can observe that surprise is inversely proportional to probability.
+\begin{equation*}
+Surprise \propto \frac{1}{Probability}
+\end{equation*}\\\\
+Surprise cannot be easily defined as 1/Probability. Given that set A has a probability of 1 yet given our prior understanding of the link between surprise and probability, the surprise of choosing number one in set A should be zero. So, if we apply the definition given above, surprise becomes 1.\\
+Hence, we use logarithmic function and define surprise as,
+\begin{equation*}
+Surprise = \log\left(\frac{1}{Probability}\right)
+\end{equation*}\\
+As we can observe that, if the probability is one surprise will yield to 0 and is the probability is 0 surprise will be undefined as we are trying to find which is not present. Figure \ref{fig:2:1} illustrates the relation between surprise and probability.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Surprise_Prob_graph}
+	\caption{Graph of surprise as a function of probability}
+	\label{fig:2:1}
+\end{figure}\\
+Now, since we are dealing with the information theory, dealt information is binary. Hence, it makes sense to use logarithmic function to the base of 2. 
+\begin{equation}\label{eq:2:3}
+Surprise = \log_{2}\left(\frac{1}{Probability}\right)
+\end{equation}\\
+Information content of an element $I(X)$, also known as surprisal or self-information of an element.\\
+Therefore, above equation \ref{eq:2:3} can be represented as,
+\begin{equation*}
+I_{X}(x) = \log_{2}\left(\frac{1}{Probability}\right)
+\end{equation*}\\
+Further considering probability of an element as P(x), equation can be rewritten as,
+\begin{equation}\label{eq:2:4}
+I_{X}(x) = \log_{2}\left(\frac{1}{P_{X}(x)}\right)
+\end{equation}\\
+If we are considering the numerous trails, then the average amount of surprise depends on the value of the surprise and the probability of observing that particular value of surprise.\\
+Hence, 
+\begin{equation}\label{eq:2:5}
+avg\left(I_{X}(x)\right) = P_{X}(x)*\log_{2}\left(\frac{1}{P_{X}(x)}\right)
+\end{equation}\\
+Now considering the formula for Entropy as discussed in equation \ref{eq:2:1} and replacing $avg\left(I_{X}(x)\right)$ from equation \ref{eq:2:5}, Entropy H(X) can be written as,\\
+\begin{equation*}
+H(X) = \sum_{x \in range(X)}  P_{X}(x)*\log_{2}\left(\frac{1}{P_{X}(x)}\right)
+\end{equation*}\\
+Considering the property of logarithm, $\log(\frac{a}{b})\ =\ \log(a)\ {-} \ \log(b)$,
+\begin{equation*}
+	H(X) = \sum_{x \in range(X)}  P_{X}(x)*\left(\log_{2}(1) {-} \log_{2}\left(P_{X}(x)\right)\right)
+\end{equation*}
+\begin{equation*}
+	H(X) = \sum_{x \in range(X)}  P_{X}(x)*\left(0 {-} \log_{2}\left(P_{X}(x)\right)\right)
+\end{equation*}
+\begin{equation}\label{eq:2:6}
+H(X) = {-}\sum_{x \in range(X)} P_{X}(x).\log_{2}P_{X}(x) 
+\end{equation}\\
+This is the formula for Shannon Entropy.\\
+The average amount of entropy present in the bitstring is given by Shannon entropy. The average quantity of entropy may give an overestimate because we are discussing it in the context of cryptography. A system's security may be compromised because of this overestimation of potential problems.
+
+%
+% Sub-Section: Min-Entropy
+%
+\subsection{Min Entropy}
+\label{subsec:fundamentals:types:min}
+The efficiency of the tactic of assuming the output of the entropy source that is most likely to occur is measured by min entropy. The min-entropy of the random number $X$ from the events that created it is correlated with the likelihood that a random number is properly predicted on the first try. In other words, min-entropy measures the lowest amount of information in the random variable $X$ that might be used to forecast the chosen value.\\
+As was demonstrated in section \ref{sec:fundamentals:entropy}, the likelihood of information content may be expressed as euqation \ref{eq:2:4}: 
+\begin{equation*}
+I_{X}(x) = \log_{2}\left(\frac{1}{P_{X}(x)}\right)
+\end{equation*}\\
+From the understanding of min-entropy $H_{\infty}(X)$ can be presented as,
+\begin{equation*}
+	H_{\infty}(X) = \min_{x \in range(X)} I_{X}(x)
+\end{equation*}\\
+Replacing the value for $I_{X}(x)$ in above equation,
+\begin{equation*}
+	H_{\infty}(X) = \min_{x \in range(X)} \log_{2}\left(\frac{1}{P_{X}(x)}\right)
+\end{equation*}\\
+Considering Property of logarithm,
+\begin{equation}\label{eq:2:7}
+H_{\infty}(X) = {-}\min_{x \in range(X)} \log_{2}\left(P_{X}(x)\right)
+\end{equation}\\
+This formula can also be presented in terms of max function as,
+\begin{equation}\label{eq:2:8}
+H_{\infty}(X) = {-}\log_{2}\left(\max_{x \in range(X)} P_{X}(x)\right)
+\end{equation}
+
+Using min-entropy for the estimations in cryptography makes perfect sense since it offers the bare minimum of information needed to forecast the random number. This offers complete defence against any unanticipated events that might jeopardize security.
+
+%
+% Sub-Section: Max-Entropy
+%
+\subsection{Max Entropy}
+\label{subsec:fundamentals:types:max}
+Max entropy is also a measure of randomness, with a distribution which maximizes the entropy. Entropy of random variable $X$ is maximum, when the distribution of the events while choosing the random variable $X$ is evenly distributed. Hence, Max entropy always comes with the uniform distribution, which is expressed by constrained max entropy distribution. 
+
+%
+% Section: Entropy Source
+%
+\section{Entropy Source}
+\label{sec:fundamentals:entropysource}
+As described in the section \ref{sec:fundamentals:entropy} entropy is a randomness source, that is very basic necessity for any deterministic random number generator. Freshness or randomness should be having some form and we need some source to obtain the entropy. Entropy in information theory is always represented in the form of bitstream. In this section we describe the model of source to obtain the entropy bits.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\textwidth]{gfx/diagrams/Entropy_Source_Model}
+	\caption{Entropy Source Model}
+	\label{fig:2:2}
+\end{figure}
+
+Figure \ref{fig:2:2} describes the entropy source model. Entropy source is entirely dependent on any unexpected or unpredictable event which is happening in the system. Any such events generally produce analog signal, that is further digitized to get the bitstring. Digitized noise data fetched unexpected event is conditioned to reduce the biasing of the string and in parallel health test validates the digitized noise to be used as a justifiable entropy.
+
+%
+% Section: Noise Source
+%
+\section{Noise Source}
+\label{sec:fundamentals:noisesource}
+Noise source as seen from the Figure \ref{fig:2:2} is the root of the entropy source model. This component is the that is based on the unforeseeable process responsible for providing the uncertain bits out of Entropy source. Few such chancy process produce binary samples which can directly be used but, in most cases, there is a need for digitization process that converts the output samples to bits.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\textwidth]{gfx/diagrams/variety_of_noise_sources}
+	\caption{Variety of Noise Sources}
+	\label{fig:2:3}
+\end{figure}
+
+There are multiple sources that can be used as a noise source. Figure \ref{fig:2:3} shows wide range of potential noise sources and corresponding availability in Automotive ECU. Noise sources in any system can be mainly classified as:
+\begin{description}
+	\item[Physical Sources] These sources are founded on natural phenomena that produce random data or based on the hardware build TRNG. Physical noise sources can be divided into several groups, such as:
+	\begin{itemize}
+		\item Thermal noise is produced by the erratically moving electrons in a semiconductor or conductor.
+		\item Shot noise is produced when electrons arrive at random in a wire or semiconductor.
+		\item Radioactive materials decay, which is what causes radioactive decay.
+		\item Noise in the atmosphere is caused by changes in the atmosphere of the Earth.		
+	\end{itemize}
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.25\textwidth]{gfx/diagrams/Filtered_sensor_output}
+		\caption{Filtered Sensor Output}
+		\label{fig:2:4}
+	\end{figure}
+
+	While raw sensor readings are typically not readily available for collection of entropy in most ECUs, physical sources typically provide significant degrees of randomness or high entropy outputs. The APIs will be made available for the gathering of entropy after the sensor values have been filtered. Values outside of the filter will be largely steady because the outputs are filtered. This lowers the output's entropy bits. Figure \ref{fig:2:4} illustrates the output available from the sensor.
+	\item[Non-Physical Sources] These sources rely on artificial mechanisms that provide random data. There are various categories into which non-physical noise sources can be divided, including:
+	\begin{itemize}
+		\item User input: This refers to any input produced by users, such as keystrokes, mouse movements, and other unpredictable inputs.
+		\item All data that is transmitted through a network, such as packet arrival times and packet sizes, is referred to as network traffic.
+		\item Disk access patterns: These are any unpredictable disk access operations, like read and write operations.
+		\item Process execution times: This covers the amount of time it takes for a process to run, which can be affected by a few variables and is sometimes challenging to forecast.		
+	\end{itemize}
+\end{description}
+
+Entropy is exclusively provided by the noise source, which is the only part of the entropy source model. The source's characteristics must be understood for it to be used for entropy collection, making this knowledge crucial. the following qualities become crucial:
+\begin{description}
+	\item[Entropy] The quantity of freshness values or bits delivered in the output sample by the source. This is how entropy is defined, and a higher entropy guarantees a high level of security for the system.
+	\item[Sampling Rate] Event-based noise sources offer entropy as soon as an event occurs, but for time-based noise sources, it's critical to assess and understand the rate at which the source's output is changing. 
+	\item[Sample Size] Each selected noise source will have an output that is a specific length. To collect entropy during each sampling period, we need to know the size of the output sample.
+	\item[Statistical Distribution] Entropy should be statistically dispersed across the sample, which means that random values in the output should be concentrated to a small number of bits yet uniformly scattered across the output's length.
+	\item[Independence] The output of the source shouldn't be dependent on any other sources, prior outputs, or any other factors that make the output deterministic. This is known as the "independency" of the source.
+\end{description}
+
+%
+% Section: Entropy Rate
+%
+\section{Entropy Rate}
+\label{sec:fundamentals:entropyrate}
+As we've seen, entropy may be thought of as a property of a probability distribution, like the mean or variance. Entropy is a measure of the uncertainty of the probability distribution on a bitstring produced by an entropy source rather than referring to any characteristic. Whereas the rate at which the entropy source is supplying entropy is known as the entropy rate. It is calculated as the judged quantity of entropy produced by a bitstring output from the source, divided by the total number of bits in the bitstring.
+As an illustration, imagine an entropy generator that generates n-bit strings with m bits of entropy in each one. Then entropy rate can be simply written as,
+\begin{equation*}
+Entropy Rate = \frac{m}{n}
+\end{equation*}
+
+%
+% Section: Conditioning
+%
+\section{Conditioning}
+\label{sec:fundamentals:conditioning}
+As we have discussed in the properties of the noise sources in section \ref{sec:fundamentals:noisesource}, output should be uniformly distributed among entire length of bitstream of output. But most of the noise source provide an output which in which the entropy bits will be concentrated to only certain portion. Also, bitstring generated in many cases will be biased. Conditioning is used to modify the bitstring to be used for cryptographical applications by reducing the biasing and distributing the entropy bits uniformly. 
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\textwidth]{gfx/diagrams/Conditioning_bitstring}
+	\caption{Conditioning the Bitstream}
+	\label{fig:2:5}
+\end{figure}
+ 
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\textwidth]{gfx/diagrams/1-conditioning}
+	\caption{Conditioning Process}
+	\label{fig:2:6}
+\end{figure}
+
+Conditioning will not increase the entropy of any bitstring. It will increase the entropy rate of the output by condensing the entropy bits to shorter bitstring to match the application required bit length. Conditioning function can be illustrated as a distillation process using Figure \ref{fig:2:6}.\\
+
+Algorithms which are used for conditioning should not reduce the entropy of the input bitstring. Hence, to avoid any wrong usage of the conditioning function, it is divided as two parts.
+
+\begin{description}
+	\item[Vetted Conditioning] Conditioning function that is examined extensively and approved by NIST. Following table provides the list of the vetted conditioned functions.
+	\begin{table}[htbp]
+		\centering
+		\label{table:2:1}
+		\begin{tabular}{||c c c||} 
+			 \hline
+			Conditioning Function & Narrowest Internal Width $(n_{w})$ & Output Length
+			$(n_{out})$
+			 \\ [0.5ex] 
+			\hline\hline
+			HMAC & hash-function output size & hash-function output size \\
+			CMAC & AES block size = 128 & AES block size = 128 \\
+			CBC-MAC & AES block size = 128 & AES block size = 128 \\
+			Hash Funnction & hash-function output size & hash-function output size \\
+			Hash\_df & hash-function output size & hash-function output size \\
+			Block\_Cipher\_df & AES key size & AES key size \\
+			\hline
+		\end{tabular}
+		\caption{Vetted Conditioning Function}
+	\end{table}
+	\item[Non-vetted Conditionin] Conditioning function that is not verified or approved by NIST. Any keyed or unkeyed cryptographic algorithm can be used as a conditioning.
+\end{description}
+
+If the vetted conditioning function is used for increasing the entropy rate, final entropy of the output$(h_{out})$ can be calculated with by using the algorithm as mentioned in NIST SP800-90. C-code of the algorithm in mentioned below. With the $n_{in}$ being input bitlength, $n_{out}$ being output bitlength, $h_{in}$ being input entropy bits and $nw$ being the narrowest width of the conditioning function, final entropy bits can be seen in output.
+
+\begin{lstlisting}
+long double output_entropy(int nin, int nout, int nw, int hin)
+{
+	long double phigh = pow(2, -1*hin);
+	long double plow = (1 - phigh)/(pow(2,( nin - 1)));
+	int n = min(nout, nw);
+	long double Psi = (pow(2,(nin - n)))*plow + phigh;
+	long double U = (pow(2,(nin - n))) + sqrt(2*n*(pow(2,(nin - n)))*log(2));
+	long double omega = U*plow;
+	long double maximum = max(omega, Psi);
+	long double output = -1*log2(maximum);
+	return output;
+}
+
+\end{lstlisting}
+
+From the above-mentioned algorithm, it can be derived that, conditioned function increases the entropy rate. Output of the conditioning is said to be full entropy if input entropy bits provided is at-least the amount of required output bits. 
+
+%
+% Section: Left-over Hash Lemma
+%
+\section{Left-over Hash Lemma}
+\label{sec:fundamentals:LHL}
+Though Left-over hash lemma is exactly a measure of randomness, since we are dealing with the cryptographic use case it is very important to understand the Leftover hash lemma and its impacts.
+
+The famous $Leftover Hash Lemma$ (LHL) states that (almost) universal hash functions are good randomness extractors. Despite its numerous applications, LHL-based extractors suffer from the following two limitations:
+\begin{description}
+	\item[Large Entropy Loss] to extract $v$ bits from distribution $X$ of min-entropy $m$ which are $\epsilon$-close to uniform, one must set $v\le m{-}2\log(1/\epsilon)$, meaning that the entropy loss $L_{def}=m{-}v\ge2\log(1/\epsilon)$. For many applications, such entropy loss is too large. 
+	\item[Large Seed Length] the seed length $n$ of (almost) universal hash function required by the LHL must be at least $n\ge \min(u{-}v,v+2\log(1/\epsilon)){-}O(1)$, where $u$ is the length of the source, and must grow with the number of extracted bits.
+\end{description}
+
+%
+% Section: 2.8	Health Test
+%
+\section{Health Test}
+\label{sec:fundamentals:HT}
+Validation and entropy estimation of the noise sources is a pre-requisite for the usage of the noise source for entropy collection. But, during the collection of entropy, noise sources are prone to failures due to the fragile nature. Hence, it is very important to detect the deviations of the source from the expected behaviour. Health Tests aim to detection such failures as quickly as possible with a high degree of probability.
+
+As discussed in section \ref{sec:fundamentals:noisesource}, noise source should provide unbiased, independent statistically distributed data. But, as discussed in section \ref{sec:fundamentals:conditioning}, most of the noise sources don’t provide such output since noise sources are affected by the external conditions such as temperature, humidity, or electric field. Health tests should be typically designed to detect such failures or deviations based on the expected output. Health tests should raise an alarm in case there is a large reduction in the outputs' entropy, noise source failures occur, or if there are hardware malfunctions, and implementations are flawed.
+
+%
+% Section: Health Test Types
+%
+\section{Health Test Types}
+\label{sec:fundamentals:HTT}
+In section \ref{sec:fundamentals:HTT} we discussed about health tests, there are three types of health tests depending on the time when it is performed.
+
+%
+% Sub-Section: Start-up Test
+%
+\subsection{Start-up Test}
+\label{subsec:fundamentals:HTT:SUT}
+Start-up health checks are intended to be run after turning on, or rebooting, and prior to using the entropy source for the first time. Prior to being employed in normal operating conditions, they offer some assurance that the entropy source components are functioning as intended and that nothing has broken since the start-up tests were last performed. The samples taken from the noise source during the start-up tests must not be utilized for routine operations until the tests are finished; however, if there are no problems, the data may be used after the tests are over.
+
+%
+% Sub-Section: Continuous Test
+%
+\subsection{Continuous Test}
+\label{subsec:fundamentals:HTT:CT}
+Continuous tests concentrate on the behaviour of the noise source and seek to identify faults as the noise source generates outputs. Continuous checks are used to enable the entropy source to identify various faults in the underlying noise source. These tests must have a very low likelihood of triggering a false alarm during the normal operation of the noise source because they are run continuously on all digitized samples obtained from the noise source. Even throughout the course of a very lengthy service life, it is frequently exceedingly unusual in many systems that a fully operating device to report a failure.
+
+There are two recommended tests, that are approved. When these tests are included as a part of continuous test, no other tests are needed. However, it is recommended that the developer add more continuous health tests that are specific to the noise source. Two tests are Repetition Count Test and Adaptive Proportion test.
+\begin{description}
+	\item[Repetition Count Test] The aim of the Repetition test is to detect immediately when catastrophic failures occur, that cause noise source to generate same output value for longer time. Repetition Count test is depicted in the Figure \ref{fig:2:7}. 
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.5\textwidth]{gfx/diagrams/Repetition_Test}
+		\caption{Repetition Count Test}
+		\label{fig:2:7}
+	\end{figure}
+	\item[Adaptive Proportion Test] The Adaptive Proportion Test is made to identify a significant loss of entropy that could happen due to a physical malfunction or shift in the noise source's environment. To determine whether a sample value happens too frequently, the test continuously measures the local frequency of occurrence of the sample value within a sequence of noise source samples. Given the source's estimated entropy per sample, the test can therefore identify when a value starts to appear much more frequently than anticipated. Figure \ref{fig:2:8}S  illustrates the Adaptive Proportion test.
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.4\textwidth]{gfx/diagrams/Adaptive_Prop}
+		\caption{Repetition Count Test}
+		\label{fig:2:8}
+	\end{figure}
+\end{description}
+
+%
+% Sub-Section: OD Test
+%
+\subsection{On-demand Test}
+\label{subsec:fundamentals:HTT:ODT}
+On-demand tests are source specific tests. These tests can be called any time. It is not mandatory to call these tests during the normal operation. However, source should be capable of performing on-demand tests of the output. On-demand tests can be called during boot. If start-up test is executed immediately after on-demand test collected outputs will not be available until start-up test is completed.  
+
+%
+% Section: Entropy Pool
+%
+\section{Entropy Pool}
+\label{sec:fundamentals:entropypool}
+Entropy is gathered in the form of a bitstream, as was evident from the previous sections. The system anticipates a higher level of entropy to remain secure. Yet, most of the entropy sources are unable to supply a whole bitstring at once. Concatenating the various outputs of the entropy source allows for the creation of bitstrings with increased entropy. The entropy pool is the name given to the memory space used to store the outputs from the entropy source.
+
+When the system demands entropy at any given moment while it is operating and the collection of entropy upon request takes a long time to generate the required amount of entropy, the use of an entropy pool becomes crucial. The image below can be used to symbolize an entropy pool. The collecting of the data into the entropy pool is shown in Figure \ref{fig:2:9}.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\textwidth]{gfx/diagrams/Entropy_Pool}
+	\caption{Data collection into the Entropy pool}
+	\label{fig:2:9}
+\end{figure}
+
+%
+% Section: Security Strength
+%
+\section{Security Strength}
+\label{sec:fundamentals:SS}
+We must know the idea of security strength and how it relates to entropy now that we are aware of entropy and how it is accumulated. The degree of defense that a cryptographic method offers against attacks is referred to as security strength. It is frequently assessed in terms of how many operations must be performed to surpass the algorithm. The harder it is to defeat the algorithm and compromise the system, the higher the security strength. 
+
+Another way to describe security strength is as a characteristic of cryptographic algorithms like DRBG that makes it difficult for an attacker to anticipate the outcome. As entropy is already understood to be the fundamental building block for the DRBG, we can state that security strength is directly connected with it. It is possible to express security strength as $security strength=\log_{2}(2^{entropy})$, which implies that security strength is equivalent to entropy, when output length of DRBG is less than the security strength.
+
+%
+% Section: DRBG
+%
+\section{DRBG}
+\label{sec:fundamentals:drbg}
+The Deterministic Random Number/Bit Generator, as mentioned in section \ref{sec:intro:Generation of Random Numbers}, is a random number generator that produces numbers using a deterministic algorithm. Figure \ref{fig:2:10} depicts the construction of a random number generator. As shown in the picture, the creation of random numbers solely depends on working/internal status if no further input, which is optional, is provided. 
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\textwidth]{gfx/diagrams/DRBG_Mechanism}
+	\caption{DRBG Mechanism}
+	\label{fig:2:10}
+\end{figure}
+
+Updates to and administration of the internal state are essential. Initial state acts as a foundation for the security strength of the generated random number because it is the input to the method, which is in a working condition. The seed is the starting point for the DRBG and is provided by the consuming application that needs a random integer. During setup and re-seeding, consuming applications update the working state.
+
+Understanding the initial setup and reseeding procedures is crucial since they provide the primary strength of the generated random number. The DRBG is initially created at boot. Re-seeding is carried out according to seedlife. Re-seeding offers resilience to predictions and backtracking. This means that an adversary cannot forecast the numbers that will be generated in the future or go back and review the numbers generated in the past based on knowledge of the current functioning state.
+
+The flow diagram in Figure \ref{fig:2:11}, can be used to illustrate how DRBG is instantiated. The security strength provided by the deterministic method utilized in DRBG is the highest security strength that can be produced by DRBG. Because of this, it is recommended that DRBG not be instantiated with a higher security strength and that the consuming application supply the entropy necessary to meet the security strength requirements.  Figure \ref{fig:2:12} shows the formation of initial internal state during the instantiation of the DRBG.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Instantiation}
+	\caption{DRBG instantiation}
+	\label{fig:2:11}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Instantiation_Seed}
+	\caption{Internal state formation during initialization}
+	\label{fig:2:12}
+\end{figure}
+
+Re-seeding is a crucial component of the DRBG that offers prediction and resistance to backtracking, as was previously explained. Re-seeding provides newness to the internal state, making it harder for the enemy to predict the following random number. Re-seeding is done when prediction resistance is needed and the re-seed interval has passed, signalling that the security strength of the produced number has decreased. Figure \ref{fig:2:13} illustrates how to reseed the DRBG.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.4\textwidth]{gfx/diagrams/Reseed}
+	\caption{DRBG Re-seed mechanism}
+	\label{fig:2:13}
+\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Reseed_Seed}
+	\caption{Working state formation during re-seed}
+	\label{fig:2:14}
+\end{figure}
+
+Now that we've spoken about the instantiation and reseeding of the DGBG, it's time to understand how random numbers are generated. The primary function of the DRBG is to generate random numbers. When necessary, a random number generator can be summoned. The number will be created if the prediction resistance is not necessary or if the reseed interval has not yet been achieved after instantiation. The desired length of a random number must be supplied as an input during the creation process, and if further security is needed, additional input can also be supplied. Figure \ref{fig:2:15} illustrates the random number generation process of DRBG.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\textwidth]{gfx/diagrams/DRBG_Generation}
+	\caption{Random Number Generation process of DRBG}
+	\label{fig:2:15}
+\end{figure}
+
+%
+% Section: Hash based DRBG
+%
+\section{Hash based DRBG}
+\label{sec:fundamentals:Hash_based_DRBG}
+We spoke about generic DRBG in the previous section. We will talk about a specific DRBG function as an illustration of a cryptographically safe DRBG in this section. Three CSPRNGs are recommended by a series NIST SP800-90A, as shown in Table  \ref{table:2:2}. One of the three DRBGs that is often employed is hash-based. 
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{||c c||} 
+		\hline
+		DRBG & Base algorithm used
+		\\ [0.5ex] 
+		\hline\hline
+		Hash\_based\_DRBG & Hash\_df\\
+		HMAC\_DRBG & HMAC\\
+		CTR\_DRBG & Block ciphers such as AES\\
+		\hline
+	\end{tabular}
+	\caption{Recommended DRBGs}
+	\label{table:2:2}
+\end{table}
+
+The underlying basis technique for creating random numbers in hash-based DRBG employs a hash derivation function. Figure \ref{fig:2:16} shows the hash derivation function's operational flow.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Hash_df}
+	\caption{Hash Derivation Function}
+	\label{fig:2:16}
+\end{figure}
+
+Hash\_based DRBG instantiation and reseeding are identical to generic DRBG, but an extra step is added to create a constant that will be utilized to create the internal state during the subsequent iterations of the generation process. The instantiation of Hash\_based DRBG is shown in Figure \ref{fig:2:17}, and its reseeding is shown in Figure 2.18.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.45\textwidth]{gfx/diagrams/Instantiating_hash_drbg}
+	\caption{Instantiation in Hash\_based DRBG}
+	\label{fig:2:17}
+\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.45\textwidth]{gfx/diagrams/reseeding_hash_drbg}
+	\caption{Reseeding Hash\_based DRBG}
+	\label{fig:2:18}
+\end{figure}
+
+In hash\_based DRBG, random integers are created as shown in Figure \ref{fig:2:19}. Hash\_gen, a function used in the generation process, is comparable to Hash\_df. Figure \ref{fig:2:20} provides an illustration of this function.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.1\textwidth]{gfx/diagrams/Hash_based_DRBG_Generation}
+	\caption{Generation of random numbers in Hash\_based DRBG}
+	\label{fig:2:19}
+\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Hash_gen}
+	\caption{Hash\_gen Algorithm}
+	\label{fig:2:20}
+\end{figure}

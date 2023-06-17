@@ -1,0 +1,80 @@
+% This is the basic latex structure to include the flyleaf. It is up to you to either \input the file and compile it with your main latex files or to generate a pdf and add it to your project. However this is a simple flyleaf since my university only had a template for word. You can use it and change it 
+\RequirePackage{silence} % :-\
+\WarningFilter{scrreprt}{Usage of package `titlesec'}
+%\WarningFilter{scrreprt}{Activating an ugly workaround}
+\WarningFilter{titlesec}{Non standard sectioning command detected}
+
+\documentclass[12pt,a4paper,bibliography=totocnumbered,listof=totocnumbered]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{epsfig}		% needed to import epf files
+\usepackage{lipsum}		% needed to generate blindtext
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{hyperref}
+
+
+%\newgeometry{
+%	top=2.5cm,
+%	bottom=2.35cm,
+%	inner=2.25cm,
+%	outer=2.15cm,
+%}
+
+
+\input{classicthesis-config.tex}
+
+\begin{document}
+\frenchspacing
+\raggedbottom	
+\pagenumbering{roman}
+\pagestyle{plain}
+
+\include{flyleaf/flyleaf}
+\input{flyleaf/abstract.tex}
+%\input{frontbackmatter/Contents}
+%\thispagestyle{empty}
+\setcounter{page}{1}
+\tableofcontents
+\cleardoublepage
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+\cleardoublepage
+\addcontentsline{toc}{chapter}{\listtablename}
+\listoftables
+
+\newpage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+\include{chapters/chapter01}
+\include{chapters/chapter02}
+\include{chapters/chapter03}
+\include{chapters/chapter04}
+\include{chapters/chapter05}
+\include{chapters/chapter06}
+\include{chapters/chapter07}
+\appendix
+\include{chapters/appendix01}
+
+\bibliographystyle{alpha}
+\bibliography{bibliography}
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+

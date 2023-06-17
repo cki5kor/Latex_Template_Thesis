@@ -1,0 +1,87 @@
+% ****************************************************************************************************
+% Master Thesis Template
+% Faculty of Electrical Engineering and Information Technology
+% Darmstadt University of Applied Sciences
+% KU, 15.9.2020
+
+
+% ****************************************************************************************************
+% Set your personel data here
+% ****************************************************************************************************
+
+\newcommand{\myTitle}{topic\xspace}
+\newcommand{\myDegree}{Master of Science (M.Sc.)\xspace}
+\newcommand{\myName}{Name\xspace}
+\newcommand{\myId}{111111\xspace}
+\newcommand{\myProf}{Prof. Dr.-Ing. \xspace}
+\newcommand{\myOtherProf}{Prof. Dr.-Ing.\xspace}
+\newcommand{\indSup}{company sup\xspace}
+\newcommand{\myLocation}{Darmstadt\xspace}
+\newcommand{\myDate}{date\xspace}
+\newcommand{\myCompany}{company\xspace}
+
+% ****************************************************************************************************
+% Load settings
+% ****************************************************************************************************
+\input{settings}
+
+
+% ****************************************************************************************************
+% Make Titlepage, Declaration, Confidentiality (if required), Abstract, Table of Contents
+% ****************************************************************************************************
+\begin{document}
+\input{TeX/Titlepage.tex}
+\cleardoublepage
+\pagenumbering{gobble}
+\input{TeX/Pre-Declaration.tex}
+\cleardoublepage
+\input{TeX/declaration.tex} 
+\cleardoublepage
+\input{Tex/NDA.tex}
+\cleardoublepage
+\input{Tex/Abstract.tex}
+\cleardoublepage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\cleardoublepage
+\tableofcontents
+\cleardoublepage 
+\listoffigures
+\addcontentsline{toc}{chapter}{\listfigurename}
+\cleardoublepage 
+\listoftables 
+\addcontentsline{toc}{chapter}{\listtablename}
+\cleardoublepage
+\input{Tex/Acronyms.tex}
+\cleardoublepage                 
+\pagestyle{headings}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ****************************************************************************************************
+% Add your Chapters here!
+% ****************************************************************************************************
+\part{Thesis}\label{pt:thesis}
+\include{chapters/chapter01}
+%\include{chapters/chapter02}
+%\include{chapters/chapter03}
+\include{chapters/chapter04}
+
+
+\appendix
+
+\part{Appendix}
+%\include{chapters/appendix01}
+\include{chapters/appendix02}
+
+
+
+
+% ****************************************************************************************************
+% Appendix
+% ****************************************************************************************************
+\appendix
+\nocite{*} 
+\bibliographystyle{plaindin}    
+\bibliography{bibliography} 
+\end{document}

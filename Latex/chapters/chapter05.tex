@@ -1,0 +1,224 @@
+\chapter{Implementation}
+\label{ch:Imp}
+As we have discussed the RNG architecture and framework design in chapter \ref{ch:CD}, we will discuss how the architecture and framework are implemented in this chapter. We will also discuss some integration hints to integrate the generated code into a project. As an example of integration, an ultrasonic ECU is considered (A project supported by the cybersecurity team at BEG).
+
+%
+% Section: Framework Description
+%
+\section{Framework Description}
+\label{sec:Imp:FD}
+As mentioned in section \ref{sec:CD:FD}, a UI-based code framework was considered in the design phase to be implemented for higher visual clarity. A Python-based UI was implemented, as Python provides ease of implementation and extendibility. Figure \ref{fig:5:1} explains the flow of the framework for code generation implemented. The framework consists of three parts:
+
+\begin{description}
+	\item[Framework Configuration] Configuration provides the flexibility to the framework to add or modify the source according to the project’s limitations. As the framework is Python based, the configuration file is also a Python file. Developers can access this file to add new sources or modify the source properties.
+	
+	\item[Properties Selection for RNG] The user performs the selection of properties. The user is provided with a provision for selecting noise sources, corresponding properties, RNG requirements, and system properties. This provision is made available using GUI. PyQT5 (Python QT UI designer) based UI designer tool is used to develop the GUI.
+	
+	\item[Code Template] The generation of code requires a template. Jinja2 code templates are used for this purpose. The code template holds the generic implementation of the architecture, as discussed in section \ref{subsec:CD:AD:AD}. Selected parameters from the GUI will be replaced in the template to generate the final integrative code.
+\end{description}
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{gfx/diagrams/implementation}
+	\caption{Framework flow}
+	\label{fig:5:1}
+\end{figure}
+
+The framework was designed and implemented with the following
+principles in mind:
+\begin{itemize}
+	\item Ease of use: The user interface is designed to be intuitive and user-friendly. GUI is split into three screens to differentiate the properties to be selected and the operations to be performed.
+	
+	\item Flexibility: Framework is kept as flexible as possible to add new sources and modify the source properties based on the project evaluations. Code templates add more flexibility to use any number of sources with any selected property.
+	
+	\item Efficiency: The code generation tool is optimized to generate code quickly and accurately. Generated code from the template can be directly integrated into the complete software module.
+\end{itemize}
+
+The framework’s efficiency, adaptability, and simplicity are some of its advantages. It streamlines the process of writing code by offering a user-friendly interface and pre-made templates. However, the framework’s code generation engine could be constrained by the available templates, and customization choices might be limited for use cases with more intricate use cases. Additionally, engineers have to perform initial evaluations before selecting the properties.
+
+
+%
+% Section: Framework Implementation
+%
+\section{Framework Implementation}
+\label{sec:Imp:FI}
+As described in section \ref{sec:Imp:FD} framework consists of three parts. The configuration file holds pre-evaluated sources and corresponding properties that the developer can modify. The properties section is implemented based on UI design, and code templates are used to generate the c-code for random number generation in ECU. Three parts are explained in detail in this section. However, before explaining each part, we need to consider the prerequisites that should be performed in each project using the framework.\\
+Prerequisites:
+\begin{itemize}
+	\item Identify potential noise sources and evaluate the properties of noise sources such as entropy estimate, sampling rate and sample size.
+	
+	\item Evaluation of security requirements of the project to decide on security strength, desired length of random numbers and reseed interval.
+	
+	\item Analysis of system criteria such as available crypto libraries such as bosch crypto-library (BCL) containing the bosch-specific implementation of cryptographic algorithms or common crypto-library (CCL) holding other secure algorithms. Memory and runtime limitations of the ECU are necessary as well.
+\end{itemize}
+
+
+%
+% sub-section: Framework Configuration
+%
+\subsection{Framework Configuration}
+\label{subsec:Imp:FI:FC}
+As mentioned in section \ref{sec:Imp:FD}, the configuration is handled using a Python file holding all the initial information required. Configuration holds pre-evaluated noise sources and their properties, as shown in Figure \ref{fig:5:1}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/Config_File}
+	\caption{Example of configuration of pre-evaluated noise sources}
+	\label{fig:5:2}
+\end{figure}
+
+The configuration file also contains all the selectable properties to provide user-friendly access to developers while using GUI.
+\begin{itemize}
+	\item The list "Noise\_Sources" holds all the identified noise sources.
+	
+	\item The object source\_prop["source"]["EntropyPerBit"] holds the pre-estimated entropy rate per bit of the source.
+	
+	\item The object source\_prop["source"]["BitPerSample"] holds the size of the output sample.
+	
+	\item The object source\_prop["source"]["SampleRate"] holds the rate at which samples were collected for the estimation.
+\end{itemize}
+ The configuration will be made available to the developers to modify according to the project needs. Any newly identified sources can be added to list and create a new structure to hold the properties of the sources. 
+
+%
+% sub-section: Noise Source selection
+%
+\subsection{Properties Selection for RNG}
+\label{subsec:Imp:FI:NSS}
+Properties selection is the second step in generating code after loading the configuration into the GUI tool. Properties selection is vital, as this determines the strength of the random number to be generated. It is essential to evaluate the noise sources by the developer before parameters are selected. To avoid confusion for users, GUI is divided into three tabs.
+
+The first tab contains the noise source selection checkboxes and a text display box. All the pre-evaluated noise sources will be listed in the tab for the selection. Text display will show the properties from of the selected noise sources the configuration file as described in previous section \ref{subsec:Imp:FI:FC} for the developer to know the properties to define other sampling rates and sample sizes. Figure \ref{fig:5:3} shows the first GUI tab.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/gui_tab1}
+	\caption{Source selection tab}
+	\label{fig:5:3}
+\end{figure}
+
+Once the noise sources are selected, the second tab provides the provision to select the parameters to be considered for using each noise source based on properties displayed in the previous tab. In this tab, a developer can configure the rate at which the sample should be collected, the size in bytes and the continuous health tests. Additionally, provision is provided to enter a function pointer for the on-demand test. Figure \ref{fig:5:3} shows the properties update tab of GUI.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/gui_tab2}
+	\caption{Source properties update tab}
+	\label{fig:5:4}
+\end{figure}
+
+Finally, the properties of the RNG are selected in the third tab. The developer can select if the RNG has to produce full-entropy random numbers. If the project requires full-entropy output, the 320 + 128 entropy bits are gathered from the sources that produce a random number of desired lengths. Else required, $3/2 * SS + 128$ bits of entropy are gathered to produce a random number of length 256 bits. Numbers $3/2*SS$ and 320 are suggested by the NIST recommendations \cite{SP90C-2022} considering the highest possible length of the random number being 256 bits. This length results from the DRBG algorithm being used, i.e., SHA-256; SHA-256 is a secure hash algorithm producing 256 bits of output. Users can also provide the if backtracking/prediction resistance is required to enable the automatic reseeding.
+
+Since the tool is generated for the customer projects developed in Bosch, most projects use base software, including crypto libraries. Hence, the user can also select the library in the base software. As the initial version of the tool supports only hash-based DRBG with SHA-256 as a function, it is selected as a default. However, provision for an update of the tool to support other DRBG functions is provided. Figure \ref{fig:5:5} shows the RNG properties selection tab for non-full-entropy random numbers, and figure \ref{fig:5:6} for full-entropy output.
+
+\begin{figure}[!h]
+	\centering
+	\begin{minipage}[b]{5 cm}
+		\includegraphics[width=\linewidth]{gfx/diagrams/gui_tab3_1} 
+		\caption{RNG properties selection tab for non-full-entropy random number}
+		\label{fig:5:5}
+	\end{minipage}
+	\begin{minipage}[b]{5 cm}
+		\includegraphics[width=\linewidth]{gfx/diagrams/gui_tab3_2}  
+		\caption{RNG properties selection tab for full-entropy random number}
+		\label{fig:5:6}
+	\end{minipage}
+\end{figure}
+
+\begin{figure}[!h]
+	\centering
+	\begin{minipage}[b]{5 cm}
+		\includegraphics[width=\linewidth]{gfx/diagrams/gui_tab3_3} 
+		\caption{Time for gathering entropy bits for non-full-entropy random number}
+		\label{fig:5:7}
+	\end{minipage}
+	\begin{minipage}[b]{5 cm}
+		\includegraphics[width=\linewidth]{gfx/diagrams/gui_tab3_4}  
+		\caption{time for gathering entropy bits for full-entropy random number}
+		\label{fig:5:8}
+	\end{minipage}
+\end{figure}
+
+Once all the properties are selected, a push button to calculate the best time required to gather the entropy is provided, and the time is displayed in the text edit widget. This calculation is based on the rate and size of the sample collected from all the selected sources and their respective entropy estimates. Users can modify the properties based on the results of calculated time and then generate the code by clicking the push button. Figure \ref{fig:5:7} and \ref{fig:5:8} show the calculated time for gathering entropy bits to produce non-full-entropy and full-entropy output, respectively.
+
+%
+% sub-section: Code structure
+%
+\subsection{Code Template}
+\label{subsec:Imp:FI:CS}
+The result of pressing the “Generate Code” push button is the generation of c-code implementing the architecture described in section \ref{subsec:CD:AD:AD}. Jinja2 package is used for writing the generic templates. As described in section {sec:CD:ACF}, parameters selected in the GUI will replace the templated part of the code.
+
+Each selected noise source generates a context of the structure as defined in the listing below. APIs will be generated to fetch the samples from each source selected in GUI. API also contains the number of bytes to be fetched from the source. The number of bytes to be collected from each source during each call is calculated based on the schedule rate and entropy per bit of the source output. The flow diagram of the code for gathering the entropy into the pool is shown in figure \ref{fig:5:9}.
+
+\begin{lstlisting}
+
+	typedef struct esPropCtx
+	{
+		const float minEntropy;
+		const uint8 numBitsPerSample;
+		const uint8 reqNumOfBytes;
+		uint8 entropyRequired[MAX_BYTES_FROM_SOURCE];
+		boolean startUpTestSt;
+		sint16 (*getNoise)(const struct esPropCtx *self, uint8 reqNumOfBytes, uint8* bytes);
+		boolean (*startUpTest)(struct esPropCtx *self);
+		contTest_t contHealth;
+		boolean (*repetitionTest)(struct esPropCtx *self);
+		boolean (*AdaptiveProportionTest)(struct esPropCtx *self);
+		boolean (*onDemandTest)(struct esPropCtx *self);
+	}esPropCtx_t;
+
+\end{lstlisting}
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/flow_diagram_pooling}
+	\caption{Code flow diagram for pooling entropy bits}
+	\label{fig:5:9}
+\end{figure}
+
+Once the entropy pooling is done, reseeding of the DRBG has to be handled to provide the prediction resistance. Figure \ref{fig:5:10} illustrates the flow diagram for DRBG reseed mechanism.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/flow_diagram_drbg}
+	\caption{Code flow diagram for reseed mechanism}
+	\label{fig:5:10}
+\end{figure}
+
+To summarize the implementation process, pre-evaluated properties of the noise sources are added to the configuration. This configuration is used for user selection of properties and scheduling the noise source. Once all the properties are selected, two files, “entropy.c” and “entropy.h”, are generated, containing the code for entropy gathering and pseudo-random number generation.
+
+%
+% sub-section: Integration
+%
+\subsection{Integration}
+\label{subsec:Imp:FI:Int}
+Lastly, files have to be integrated into the complete ECU software for the code to be executed in the ECU. To integrate the files following steps have to be considered.
+\begin{enumerate}
+	\item Files should be copied to the corresponding location in the software project and included in the makefile for build purposes.
+	
+	\item Call the \textit{void collectEntropy(void);} method in 10ms task, this method further schedules the noise source for fetching the output samples.
+	
+	\item API \textit{getXXXNoise} will be generated for each noise source with the number of bytes to be fetched. Update \textit{getXXXNoise} API to map the corresponding source API to gather noise. An example of \textit{getXXXNoise} is shown in figure \ref{fig:5:11}.
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/api_example}
+		\caption{Example API for getTimerNoise}
+		\label{fig:5:11}
+	\end{figure}	
+	
+	Noise source APIs are specific to each source and ECU. Therefore, generating the API \textit{getXXXNoise} mapped to the source's actual API is impossible. Here, provision for the mapping of the source is provided. Based on the number of bytes requested from the source, samples should be mapped to \textit{bytes} pointer, and if any error occurs during the collection, the return code has to be set to $-1$.
+	
+	\item Include the function declaration to link the pointer if any on-demand tests are requested.
+	
+	\item Use the API \textit{getRandomNumber(uint8* randNum, uint16 length);} to fetch the pseudo random number.
+	
+	\item Compile and run the executable in ECU.
+	
+\end{enumerate}
+
+
+%
+% Section: Chapter Summary
+%
+\section{Chapter Summary}
+\label{sec:Imp:CS}
+In this chapter, we discussed the implementation strategies to develop a GUI and template to generate the code based on the properties selected by the developer. We also discussed the integration hints to add the generated code to the project and compile it to execute in ECU. In the next chapter, we will discuss the results and perform the risk analysis of the target entropy.
+
+
+

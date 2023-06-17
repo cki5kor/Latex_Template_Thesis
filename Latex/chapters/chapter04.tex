@@ -1,0 +1,288 @@
+\chapter{Conceptual Design}
+\label{ch:CD}
+
+In this chapter, we focus on the random number generator's requirement analysis and concept design, addressing the conceptual gaps identified during the state-of-the-art review. This chapter begins with a brief recap of the motivation as described in section \ref{sec:intro:structure} and objectives as mentioned in section \ref{sec:intro:Objective}. It then describes the requirement analysis process, highlighting the identified gaps and the corresponding design considerations. Finally, it presents the concept design developed to bridge the conceptual gaps and fulfil the research objectives.
+
+%
+% Section: Purpose of Thesis
+%
+\section{Purpose of Thesis}
+\label{sec:CD:PoT}
+As described in chapter \ref{ch:intro}, we need high-quality random numbers for the security application in an ECU to create difficulty for attackers to intrude into the system. However, generating random numbers in a closed system such as ECU is hard. Most ECUs are equipped with a Hardware Security Module (HSM), a hardware-based TRNG in ECU, to resolve the difficulty in generating random numbers. The random numbers generated from HSM can be used directly or be fed as a seed for DRBG, depending on the time required to generate the number by HSM.
+
+In contrast, as described in section \ref{sec:intro:structure}, only some ECUs are equipped with HSM. Hence, there is a need for alternate methods to generate random numbers while maintaining the quality. One such approach is using DRBG to generate random numbers. Nevertheless, as discussed in section \ref{sec:fundamentals:drbg}, DRBG provides a pseudo-random number, and the security strength of the random number entirely depends on the seed provided as an input. Further, to form a seed for DRBG, we require noise sources that provide entropy, and noise sources in the ECU might or might not provide higher entropy due to the limitations in the API to read the unfiltered sensor data. However, there is no standard way to gather the entropy to satisfy the security needs and generate a random number.
+
+In order to achieve the goal of generating the random numbers of desired length and desired security strength, as described in the section \ref{sec:intro:Objective}, an architecture has to be designed to collect the entropy from the noise source, form seed for DRBG and generate the random number. Further, to achieve this, we need to identify the potential noise sources and estimate the entropy provided by the source's output. Furthermore, a framework is needed to ease the implementation process for the developer by generating the code containing the designed architecture.
+
+
+
+%
+% Section: Requirement Gathering
+%
+\section{Requirement Gathering}
+\label{sec:CD:HLR}
+
+According to the purpose of this thesis, as discussed in section \ref{sec:CD:PoT}, we can draw a user requirement as a random number with a desired length and security strength. In other words, an API has to be made available to satisfy the random number of desired length needs when requested with a specific security level. To achieve the ultimate goal, we break down this user requirement into following functional and non-functional requirements, as discussed in the previous section.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.99\textwidth]{gfx/diagrams/HLR-1}
+	\caption{High-level requirement split}
+	\label{fig:4:1}
+\end{figure}
+
+Figure \ref{fig:4:1} describes the high-level requirement split. As a functional requirement, an architecture has to be designed following the NIST SP800-90 standard to collect the entropy from the entropy sources and seed the DRBG to generate the random numbers. As a non-functional requirement, the framework has to be designed to provide the one-click implementation of architecture designed considering all the criteria of the random numbers.
+
+%
+% Section: Conceptual Gap from SoA
+%
+\section{Conceptual Gap from SoA}
+\label{sec:CD:CG}
+Describing the high-level functional requirements in section \ref{sec:CD:HLR}, we will analyze the possible solutions for designing an architecture in this section. We will check the feasibility of state-of-the-art solution to achieve the final objective as described in \ref{sec:intro:Objective} and \ref{sec:CD:RA}.  
+
+\begin{description}
+	\item[NIST SP 800-90] As discussed in section \ref{sec:SoA:NIST}, NIST SP 800-90 series provides three RBG constructions. RBG1 construction, as discussed in section \ref{subsec:SoA:RBG1}, suits well if ECU has no noise sources that can be used. RBG1 provides a hint for solving boot-time entropy necessity in virgin ECU. Nevertheless, considering the non-availability of direct access to the entropy source, freshness value will not be available to provide prediction resistance. Hence, RBG1 construction cannot be directly considered for our solution.
+	
+	RBG2, as discussed in \ref{subsec:SoA:RBG2}, theoretically solves our problem. However, as studied in the motivation section \ref{sec:intro:structure}, ECU lacking TRNG creates practical limitations causing high latency during initialization or reseeding. This latency results from noise sources that provide a meagre entropy rate. Hence, we must wait until the required amount of entropy is gathered. RBG2 also does not provide a solution for boot time entropy requirements.
+	
+	RBG3(XOR) and RBG3(RS), as in section \ref{subsec:SoA:RBG3}, similar to RBG2 construction, provide an ideal theoretical solution. RBG3 construction provides a higher degree of prediction resistance and fully secures random numbers \cite{SP90C-2022}. Nevertheless, this construction adds additional delay compared with RBG2 during the generation process, as RBG3 requires additional entropy while generating random numbers. RBG3 construction also requires physical noise sources. However, such physical noise sources in ECU without HSM provide the filtered output that contains low entropy. Hence RBG3 can not be used directly.
+	
+	Although NIST SP800-90 provides a precise standard mechanism for constructing random number generators (RNG), it raises a few questions for practical implementations, as discussed below. Figure \ref{fig:4:2} shows the illustration of RNG design based on NIST recommendations.
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/Initial_design_with_problems}
+		\caption{RNG construction considering NIST recommendations}
+		\label{fig:4:2}
+	\end{figure}
+
+	\begin{enumerate}	
+		\item Noise source scheduling is not considered, as early scheduling might result in unchanged outputs.
+		
+		\item How long should the application request wait for the random number?
+				
+		\item If conditioning is done for every output of the noise source,
+		what is the entropy loss, or will conditioning after collecting \textit{enough entropy} to satisfy the security needs reduce the loss?
+		
+		\item At what rate must reseeding the DRBG be done?
+		
+		\item How to collect the nonce for initialization and additional
+		entropy for the generation process?
+	\end{enumerate} 
+
+	These questions make it difficult to design architecture 
+	based on NIST recommendations. SoA, besides the NIST recommendation, provides a solution to the abovementioned questions. However, we will discuss the limitations raised by Yarrow, Fortuna and LinuxRNG below.
+	
+	\item[Yarrow] As discussed in section \ref{sec:SoA:YA}, Yarrow provides reasonable practical solutions for requirements considering the limitations mentioned in section \ref{sec:intro:structure}. However, the most significant disadvantage is the collection of 160 bits of entropy from one source. Considering the constraint in some of the ECU, noise sources provide a low entropy rate sample due to filtered sensor data. It takes a considerable amount of time to collect 160 bits of entropy from one single source. Hence, creating a higher delay in some ECU will not provide a generic solution for all the ECUs. Yarrow also does not provide a solution for boot time entropy requirements. Hence, Yarrow is also only a partial solution for the requirements.
+	
+	\item[Fortuna] Fortuna is an extension of Yarrow, as discussed in \ref{sec:SoA:FA}. It resolves most requirements considering our practical limitations discussed in \ref{sec:intro:structure}. However, Fortuna requires 32 entropy pools of size atleast 128 bits \cite{FT-2011}; this increases memory constraints in the ECU. These 32 entropy pools create a higher risk of memory limitation for actual applications. Hence, Fortuna also is not a valid solution.
+	
+	\item[Linux RNG] As described in section \ref{sec:SoA:LRNG}, Linux RNG is the most widely used practical implementation of random number generation. However, LinuxRNGs are built for Linux operating systems and require the system events user interactions to generate entropy as described in figure \ref{fig:3:16}. As ECUs often operate in real-time environments, where timing and determinism are crucial, most ECUs do not have Linux operating systems, causing problematic situations to integrate LinuxRNG into ECU. Also, ECUs, as described in figure \ref{fig:2:3}, lack events obtained by user interactions in all the ECUs and access to system events is limited. This limited access to the sources adds additional timing constraints in safety-critical applications. Hence, LinuxRNG cannot be considered directly in real-time environments like automotive ECUs.  
+	
+\end{description}
+
+As discussed above, the state-of-the-art cannot be directly used as a solution for designing an architecture for construction of RNG working for all the ECUs because of several reasons such as low-entropy sources and memory constraints. However, SoA provides a way to achieve the goal of generating high quality random numbers. Based on the hints from the SoA we will design the basic structure and analyse the low level requirements in the following section.
+
+%
+% Section: RNG Design
+%
+\section{Random Number Generator Design}
+\label{sec:CD:RNGD}
+As discussed in section \ref{sec:CD:HLR}, high-level functional requirement is designing an algorithm to generate the random numbers using DRBG. Entropy has to be gathered from the noise sources available in the ECU to form the internal state of the DRBG. Considering the idea obtained from the SoA, an initial design for collecting entropy and generating random numbers was drafted. 
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.85\textwidth]{gfx/diagrams/entropy_collection_design}
+	\caption{Design for entropy collection mechanism}
+	\label{fig:4:3}
+\end{figure}
+
+To design the entropy collection mechanism as illustrated in figure \ref{fig:4:3}, the following design decisions were made. These decisions further provided a base for low-level requirements.
+\begin{itemize}
+	\item Multiple noise sources should be considered. As discussed earlier, one limitation in most ECUs without HSM is the non-availability of sources that provide high entropy outputs. Hence, it is required to identify the potential noise source in the ECU. Additionally, pre-estimation of the entropy for each source should be made to know the amount of entropy being gathered into the pool. This decision created a low-level requirement for identifying and analyzing the noise sources, as shown in figure \ref{fig:4:4}.
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/Source_Ident_Req}
+		\caption{Requirement for source identification}
+		\label{fig:4:4}
+	\end{figure}
+
+	This requirement further creates two non-functional requirements, analysis of the sampling-rate and sample size of the output. As mentioned in section \ref{sec:intro:structure}, every ECU has its noise sources. Hence, this requirement has to be handled in the project that uses the architecture.
+	
+	\item Collection of entropy from the sources into the pool as described in SoA. The entropy pool is considered to gather the entropy from the noise sources during runtime. Collection of entropy from the source on request might add up the delay similar to the design based on NIST recommendation \ref{fig:4:2}. The health of output samples from the noise source has to be tested to ensure that the error signals are not added to the pool, causing the drop in entropy rate. 
+	
+	The desired security strength of the random numbers has to be pre-defined. While gathering the entropy from the source into the pool, the amount of gathered entropy needs to be calculated. This calculation ensures that the collected entropy is sufficient to satisfy the security requirements. Since the noise sources in ECU might be physical or non-physical, we will consider method two as discussed in section \ref{subsec:SoA:ECM} for gathering entropy from the source. Requirements formed by these design decisions are as shown in figure \ref{fig:4:5}.
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/Entropy_Collection_Req}
+		\caption{Requirement for entropy collection}
+		\label{fig:4:5}
+	\end{figure}
+
+	\item As discussed in the earlier sections, noise sources in the ECU might not provide the full-entropy output; this might be indicated by the pre-estimate as described in the requirement for analysis of entropy source. Conditioning the output of each source might increase the rate, but performing conditioning during each sampling will reduce the performance of the ECU, considering the significant time taken for execution of the conditioning algorithm. Hence we avoid conditioning each output; this results in the bitstring with an inadequate entropy rate in the pool. Therefore, conditioning has to be performed to improve the entropy rate of the bitstring stored in the pool. Figure \ref{fig:4:6} indicates the requirement for improving the entropy rate. 
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=0.8\textwidth]{gfx/diagrams/Improve_Rate_Req}
+		\caption{Requirement for improving the entropy rate }
+		\label{fig:4:6}
+	\end{figure}
+
+	\item As described in section \ref{sec:fundamentals:ES}, there are possibilities of losing entropy during conditioning the bitstring. Since the entropy from the non-physical sources is considered, there are high possibilities of overestimating the entropy. NIST recommends the collection of additional 64 bits of entropy to compensate for this loss \cite{SP90C-2022, FEA-2023}. Hence, we need to collect additional 64 bits of entropy into the pool for each conditioning algorithm. Entropy pool size has to be big enough to hold \textit{enough entropy} bits where \textit{enough entropy} is assumed in our design as required security strength + 64 entropy bits for each conditioning element.
+	
+\end{itemize}
+
+Once the design and requirements for entropy collection were detailed, an initial draft design for generating random numbers was created, as shown in figure \ref{fig:4:7}. Design decisions for the random number generator are as follows below. 
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.99\textwidth]{gfx/diagrams/gen_design}
+	\caption{Random number generation design}
+	\label{fig:4:7}
+\end{figure}
+
+\begin{itemize}
+	\item DRBG is used to generate the random numbers, as we have discussed in section \ref{sec:fundamentals:drbg}, DRBG requires entropy during initialization and reseeding. In order to avoid the latency caused by the conditioning of the bitstring during instantiation or reseeding, the concept of secondary to hold the seed is considered. The secondary pool shall contain two individual pools to serve as a backup seed. 
+	
+	In typical scenarios, the DRBG is instantiated during the boot-up sequence of the ECU; hence, entropy is required during boot. Entropy collection during the boot sequence takes a longer time, as every source has to be initialized before providing the output. To resolve latency caused by a collection of entropy, the seed shall be stored in the secure memory in the previous run-cycle of the ECU, which will be used to instantiate the DRBG. This boot-time entropy requirement raised concern for seed availability for the ECU's virgin boot (first run-cycle). Based on the idea from Fortuna, as discussed in \ref{sec:SoA:FA}, the seed-file shall be used for virgin entropy requirements.
+	
+	These design decisions raised requirements for generating the random numbers and satisfying the boot-time entropy requirements. This requirement is as described in figure \ref{fig:4:8}
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=0.99\textwidth]{gfx/diagrams/gen_rand_req}
+		\caption{Requirement for generating the random number}
+		\label{fig:4:8}
+	\end{figure}
+
+	\item As discussed in the previous decision, the DRBG is instantiated using a stored seed. Since this seed is not fresh entropy, the seed can be compromised. In order to add freshness to the working state of DRBG and to provide prediction resistance, DRBG shall be reseeded as soon as the first full-entropy seed is available. Additionally, reseed of DRBG shall be performed when the reseed interval elapses or based on the user's request. Requirements formed by these design decisions are as shown in figure \ref{fig:4:9}.
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=0.99\textwidth]{gfx/diagrams/Pred_Res_Req}
+		\caption{Requirement for providing prediction resistance}
+		\label{fig:4:9}
+	\end{figure}
+
+	\item Decision to have a secondary pool to maintain seed was discussed earlier. This decision requires a strategy to merge the compressed bitstring from the primary pool to the secondary pool. Merging bitstring into the secondary pool when the secondary pool is empty is straightforward. When the secondary pool already has a seed, this seed shall be XORed with fresh bitstring from the primary pool, re-condition the XORed bitstring to reduce biasing caused by XORing and merge to the secondary pool. Additionally, bitstring from the primary pool shall be merged alternatively into each pool of the secondary pool to maintain the same freshness in both pools of the secondary pool.
+	 
+\end{itemize}
+
+Considering all the design decisions made to collect the entropy from the noise source into a primary pool and generate random numbers, an architecture was designed as described in the following section.
+
+%
+% Section: Architecture Diagram of RNG
+%
+\section{Architecture Diagram of RNG}
+\label{subsec:CD:AD:AD}
+Architectural design and the decisions for the design were explained in section \ref{sec:CD:RNGD}. Further, requirements based on the design decision were drafted and presented in the same section. Based on the requirements, the architecture of RNG can be split into five blocks, as shown in figure \ref{fig:4:10}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.725\textwidth]{gfx/diagrams/architecture_diagram}
+	\caption{Architecture Diagram for RNG}
+	\label{fig:4:10}
+\end{figure}
+
+\begin{description}
+	\item[Entropy Source] This block consists of the pre-evaluated noise sources. Based on the analysis of the sampling rate of the noise source, each source is scheduled to fetch the sample of evaluated size. Health testing of each source is performed to ensure the correctness of the source. During each reading of the sample, data and the status of the health test are transferred to the primary pool.
+	
+	\item[Primary Pool] This block performed the primary pool management. Pool management consists of checking health test status and concatenating the entropy into the pool. Based on the pre-estimated entropy of the source, during each addition of the sample, the amount of entropy added into the pool is counted. Since we have two conditioning functions, entropy is collected until the count reaches desired security strength + 128 (64 additional entropy bits for each conditioning function). Later, the bitstring in the pool is compressed and fed to the secondary pool.
+
+	\item[Secondary Pool] Management of the secondary pool and reseeding of DRBG is handled in this block. When a compressed bitstring from the primary pool is sent to the secondary pool, this block checks which block of the secondary pool bitstring has to be stored, and if seed already exists in the block, it is XORed with the incoming bit string. Further XORed bitstring is conditioned again and stored in the pool. Reseed of DRBG after the first secondary pool update is handled, and storage of seed in memory to serve the instantiation of DRBG in the next cycle is performed during the second pool update.
+	
+	\item[Secure Memroy] Secure memory is a non-volatile memory (NvM) holding the full-entropy bits for serving as a seed during instantiation in the cycle. After the second update of the secondary pool, entropy bits are stored in secure memory and during the instantiation of the DRBG in the next cycle; this bitstring is read back from memory and fed to DRBG.
+	
+	\item[DRBG] DRBG performs the generation of pseudo-random numbers on request. DRBG also checks when the reseeding has to be performed and raises reseed requests to the secondary pool.
+	 
+\end{description}
+
+To summarize the architecture briefly, entropy collected from the source is stored in the primary pool. Once sufficient entropy is collected in the secondary pool, it is compressed and stored in the secondary pool. The secondary pool handles the reseeding of DRBG and storing the seed in NvM. DRBG generates random numbers upon request.
+
+%
+% Section: Framework Design
+%
+\section{Framework Design}
+\label{sec:CD:FD}
+As discussed in section \ref{sec:CD:HLR}, a high-level non-functional requirement is designing a framework fulfilling the architectural needs. The main idea of the framework shall be to provide a user-friendly interface to select the properties of the RNG and to generate a code according to the designed architecture for generating random numbers. 
+
+The framework should allow the developer to implement the RNG by reusing proven generated code. This code generation shall ease the developer's task to implement the same architecture for each variant of ECU. Considering the main idea of the framework, the initial design of the framework was drafted as described in figure \ref{fig:4:12}. The behavioural decisions for designing a framework are described below.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{gfx/diagrams/Framework_design}
+	\caption{Framework design diagram}
+	\label{fig:4:12}
+\end{figure} 
+
+\begin{itemize}
+	
+	\item Framework shall user friendly for the selection of system criteria. The initial idea to support this user interaction was considered using Excel. However, a UI-based framework provides higher visual clarity and extension abilities. Hence, a UI-based tool for the selection of properties and code generation. 
+	
+	\item Considering the functional requirement of identification of noise source and pre-estimation of properties of the sources, the tool should be capable of holding this information. Pre-configuration of the tool helps in handling this functional requirement in the tool. The configuration file shall hold all the pre-evaluated properties of the potential noise sources and be loaded onto the tool during initialization. Once the properties are loaded, this information should be displayed in the tool for user selection.
+		
+	\item Selection mechanism has to be provided to choose the noise sources and their properties as displayed in the tool. Based on the pre-evaluated properties as displayed, the user shall be able to provide the noise source criteria to be considered for the collection of entropy, such as sampling rate, sample size, and health tests to be considered. 
+	
+	\item As essential as a noise source, it is also vital to select the DRBG properties to ensure the security of the generated random number. DRBG properties such as required security strength, prediction/backtracking requirement, and reseed interval define the quality of the random number. Hence, provision to select such properties shall be provided in the framework. Additionally, the selection ability of any typical system properties, such as pre-integrated crypto-libraries, should be provided to ease the integration efforts.
+		
+	\item Provision to know the best case time to gather the required amount of entropy should be provided. This time calculation allows users to know the possible latency in advance and to tweak the criteria of noise sources to adjust the collection time. 
+	
+	\item Code generation according to the architecture described in section \ref{sec:CD:AD}, considering all the selected factors. Generated code shall contain all necessary APIs to ease integration into the complete software. Code templates shall be used to achieve this code generation according to the designed architecture with any selected source as an entropy source.  
+	
+	\item Designed framework and generated code shall be tested and verified to ensure the quality of the code to be integrated into safety-critical ECU software.	
+	
+\end{itemize}
+
+Based on the framework's design and decisions described above, a low-level non-functional requirement was drafted as described in figure \ref{fig:4:13}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{gfx/diagrams/UI_Req}
+	\caption{Requirement for UI-based code framework}
+	\label{fig:4:13}
+\end{figure}
+
+Considering all the decisions made to design a code generation framework, an software architecture was designed as described in the following section.
+
+
+%
+% Section: Architecture of Code Framework
+%
+\section{Architecture of Code Framework}
+\label{sec:CD:ACF}
+Code framework design and the corresponding requirements were discussed in the previous section \ref{sec:CD:FD}. Based on the requirements, software architecture was developed to implement a framework. The framework architecture consists of two parts, as shown in figure \ref{fig:4:14}. 
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/Framework_arch}
+	\caption{Software architecture of the framework}
+	\label{fig:4:14}
+\end{figure}
+\begin{description}
+	\item[Graphical User Interface (GUI)] The GUI in the framework manages the loading of the configuration file to display all the pre-evaluated sources and their properties. GUI accepts the user input to select source, source properties, DRBG properties and system criteria. Necessary information shall be displayed in the GUI of the tool for user benefit. Upon request from the code generation tool, GUI shall provide all the information required to generate the code.
+	
+	\item[Code Generator] Code generator consists of two parts, code templates holding the generic code structure according to the architecture and the second part is user-selected RNG properties. The code generator reads all the specific properties from the GUI and replaces the generic template in the templated code to generate the project-specific code.
+	
+\end{description}
+
+%
+% Section: Other generic requirements
+%
+\section{Other Generic Requirements}
+\label{sec:CD:OGR}
+Based on the RNG architecture and code framework, other system requirements were raised, as discussed below. 
+\begin{description}
+	\item[Attack Vectors] Establish the operational settings and create the attack vectors to ascertain the entropy source’s fragility.
+	
+	\item[Mitigation Strategy] Develop mitigation techniques to lessen the impact of failure if the system fails to deliver a decent random number.
+	
+	\item[Framework Validation] Framework should be verified and validated for developers' use to generate the RNG specific to each project. This validation ensures the safe re-use of the code generator.
+\end{description}
+
+
+%
+% Section: Chapter Summary
+%
+\section{Chapter Summary}
+\label{sec:CD:Summary}
+Summing up the contents discussed in this chapter, we analyzed the requirements based on the goal defined in section \ref{sec:intro:Objective}. Later we reasoned about design considerations for RNG architecture. At last, we discussed the framework design. The coming chapters will discuss the concept’s implementation, integration and results.

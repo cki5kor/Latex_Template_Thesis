@@ -1,0 +1,270 @@
+\ifglsentryexists{AI}{}%
+{%
+\gls@defglossaryentry{AI}%
+{%
+name={AI},%
+sort={AI},%
+type={acronym},%
+first={Artificial Intelligence\glsspace (AI)},%
+firstplural={Artificial Intelligences\glsspace (AIs)},%
+text={AI},%
+plural={AIs},%
+description={Artificial Intelligence},%
+descriptionplural={Artificial Intelligence\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Artificial Intelligence},%
+longplural={Artificial Intelligences},%
+short={AI},%
+shortplural={AIs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{NRNG}{}%
+{%
+\gls@defglossaryentry{NRNG}%
+{%
+name={NRNG},%
+sort={NRNG},%
+type={acronym},%
+first={Non-Deterministic Random Number Generator\glsspace (NRNG)},%
+firstplural={Non-Deterministic Random Number Generators\glsspace (NRNGs)},%
+text={NRNG},%
+plural={NRNGs},%
+description={Non-Deterministic Random Number Generator},%
+descriptionplural={Non-Deterministic Random Number Generator\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Non-Deterministic Random Number Generator},%
+longplural={Non-Deterministic Random Number Generators},%
+short={NRNG},%
+shortplural={NRNGs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{NRBG}{}%
+{%
+\gls@defglossaryentry{NRBG}%
+{%
+name={NRBG},%
+sort={NRBG},%
+type={acronym},%
+first={Non-Deterministic Random Bit Generator\glsspace (NRBG)},%
+firstplural={Non-Deterministic Random Bit Generators\glsspace (NRBGs)},%
+text={NRBG},%
+plural={NRBGs},%
+description={Non-Deterministic Random Bit Generator},%
+descriptionplural={Non-Deterministic Random Bit Generator\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Non-Deterministic Random Bit Generator},%
+longplural={Non-Deterministic Random Bit Generators},%
+short={NRBG},%
+shortplural={NRBGs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{TRNG}{}%
+{%
+\gls@defglossaryentry{TRNG}%
+{%
+name={TRNG},%
+sort={TRNG},%
+type={acronym},%
+first={True Random Number Generator\glsspace (TRNG)},%
+firstplural={True Random Number Generators\glsspace (TRNGs)},%
+text={TRNG},%
+plural={TRNGs},%
+description={True Random Number Generator},%
+descriptionplural={True Random Number Generator\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={True Random Number Generator},%
+longplural={True Random Number Generators},%
+short={TRNG},%
+shortplural={TRNGs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{DRNG}{}%
+{%
+\gls@defglossaryentry{DRNG}%
+{%
+name={DRNG},%
+sort={DRNG},%
+type={acronym},%
+first={Deterministic Random Number Generator\glsspace (DRNG)},%
+firstplural={Deterministic Random Number Generators\glsspace (DRNGs)},%
+text={DRNG},%
+plural={DRNGs},%
+description={Deterministic Random Number Generator},%
+descriptionplural={Deterministic Random Number Generator\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Deterministic Random Number Generator},%
+longplural={Deterministic Random Number Generators},%
+short={DRNG},%
+shortplural={DRNGs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{PRNG}{}%
+{%
+\gls@defglossaryentry{PRNG}%
+{%
+name={PRNG},%
+sort={PRNG},%
+type={acronym},%
+first={Pseudo Random Number Generator\glsspace (PRNG)},%
+firstplural={Pseudo Random Number Generators\glsspace (PRNGs)},%
+text={PRNG},%
+plural={PRNGs},%
+description={Pseudo Random Number Generator},%
+descriptionplural={Pseudo Random Number Generator\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Pseudo Random Number Generator},%
+longplural={Pseudo Random Number Generators},%
+short={PRNG},%
+shortplural={PRNGs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{CSPRNG}{}%
+{%
+\gls@defglossaryentry{CSPRNG}%
+{%
+name={CSPRNG},%
+sort={CSPRNG},%
+type={acronym},%
+first={Cryptographically Secure Pseudo Random Number Generator\glsspace (CSPRNG)},%
+firstplural={Cryptographically Secure Pseudo Random Number Generators\glsspace (CSPRNGs)},%
+text={CSPRNG},%
+plural={CSPRNGs},%
+description={Cryptographically Secure Pseudo Random Number Generator},%
+descriptionplural={Cryptographically Secure Pseudo Random Number Generator\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Cryptographically Secure Pseudo Random Number Generator},%
+longplural={Cryptographically Secure Pseudo Random Number Generators},%
+short={CSPRNG},%
+shortplural={CSPRNGs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{LFSR}{}%
+{%
+\gls@defglossaryentry{LFSR}%
+{%
+name={[},%
+sort={[},%
+type={acronym},%
+first={L\glsspace ([)},%
+firstplural={Ls\glsspace ([s)},%
+text={[},%
+plural={[s},%
+description={L},%
+descriptionplural={L\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={L},%
+longplural={Ls},%
+short={[},%
+shortplural={[s},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{ECU}{}%
+{%
+\gls@defglossaryentry{ECU}%
+{%
+name={ECU},%
+sort={ECU},%
+type={acronym},%
+first={Electronic Control Unit\glsspace (ECU)},%
+firstplural={Electronic Control Units\glsspace (ECUs)},%
+text={ECU},%
+plural={ECUs},%
+description={Electronic Control Unit},%
+descriptionplural={Electronic Control Unit\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Electronic Control Unit},%
+longplural={Electronic Control Units},%
+short={ECU},%
+shortplural={ECUs},%
+counter={page},%
+parent={},%
+%
+}%
+}%

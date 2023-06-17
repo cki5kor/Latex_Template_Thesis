@@ -1,0 +1,351 @@
+\chapter{State of the Art}
+\label{ch:SoA}
+
+This chapter will explain the current state-of-the-art for random number generation. Initially, we learn about the recommendations provided by the NIST standard, then consider the entropy pooling algorithms such as Fortuna and Linux RNG.
+
+%
+% Section: NIST SP 800-90 Standard
+%
+\section{NIST SP 800-90 Standard}
+\label{sec:SoA:NIST}
+
+The NIST SP 800-90 series advises using one of three distinct methods for random number generation. RBG1, RBG2, and RBG3 are these designs \cite{SP90C-2022}. Each RBG construction uses an entropy source, as explained in section \ref{sec:fundamentals:entropy}, and a DRBG, as per table \ref{table:2:2}. The characteristics of RBG1, RBG2, and RBG3 are shown in Table \ref{table:3:1}.
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{||p{2cm} p{2cm} p{2cm} p{2.5cm} p{2.5cm}||}
+		\hline
+		Design & Internal Entropy Source & Prediction Resistance & Full Entropy & Entropy Source Type
+		\\ [0.3ex] 
+		\hline\hline
+		RBG1 & No & No & No & Physical \\
+		RBG2 & Yes & Yes & No & Physical or Non-Physical\\
+		RBG3 & Yes & Yes & Yes & Physical \\
+		\hline
+	\end{tabular}
+	\caption{RBG Properties \cite{SP90C-2022}}
+	\label{table:3:1}
+\end{table}
+
+RBG1 does not offer prediction resistance, according to the interpretation of the table. In other words, RBG1 does not permit reseeding, which means that RBG1 is not given access to entropy sources after it has been created. Only once throughout the RBG’s lifespan does RBG1 supply entropy to DRBG.
+
+One or more entropy sources are built into the RBG2 architecture and used internally during the start-up and reseeding of the DRBG. Reseeding enables the provision of prediction resistance in RBG2 construction.
+
+RBG3 delivers the output with a security level according to the length of random numbers that was requested. RBG3 generates a random number with complete entropy, in other words. There are two different versions of this architecture, which also resists predictions.
+
+\begin{itemize}
+	\item An RBG3(XOR) structure uses the exclusive-or (XOR) operation to combine the output of one or more certified entropy sources with an instantiated, authorized DRBG.
+	
+	\item An RBG3(RS) architecture constantly reseeds the DRBG using randomness input from one or more certified entropy sources.
+\end{itemize}
+
+%
+% Sub-Section: RBG1 Construction 
+%
+\subsection{RBG1 Construction}
+\label{subsec:SoA:RBG1}
+As discussed in section \ref{sec:SoA:NIST}, An RBG1 structure supplies cryptographic random bits to a device without an internal randomness source. Its security solely hinges on being safely instantiated from an RBG with access to an external physical entropy source \cite{SP90C-2022}. 
+
+Before being used for the first time by an RBG2 building or an RBG3 construction using a secure channel, an RBG1 construction is only instantiated (or seeded) once. After DRBG instantiation, there is no longer a randomness source accessible. Hence an RBG1 construction cannot be reseeded and cannot consequently offer prediction resistance. Figure \ref{fig:3:1} illustrates the instantiation of RBG1 using RBG2 or RBG3 as a randomness source.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/RBG1_instantiation}
+	\caption{RBG1 Construction \cite{SP90C-2022}}
+	\label{fig:3:1}
+\end{figure}
+
+Seeding of RBG1 can be used as a way to provide the initial seed to DRBG in a virgin ECU. Seed can be generated externally using high-quality TRNG in a manufacturing plant that is stored in a secure memory of an ECU. Storage space where multiple seeds can be stored is also known as \textit{seedfile}. This seed can be used as an input seed for DRBG during the initialization of DRBG during a virgin ECU boot. Using such \textit{seedfile} to serve as a seed provider for the lifetime of ECU might not be recommended, as the entire strength of security depends only on \textit{seedfile}.
+
+%
+% Sub-Section: Entropy Consideration Methods 
+%
+\subsection{Entropy Consideration Methods}
+\label{subsec:SoA:ECM}
+During our discussion about the building of RBG1 in the preceding part, we have yet to mention entropy consideration techniques since RBG1 accesses entropy through RBG2 or RBG3 but not directly from randomness sources. As further discussions include entropy considerations in RBG construction, it is vital to comprehend how entropy is calculated in each consideration. There are two ways to get the entropy from the source, according to the NIST SP800-90 series.
+
+\begin{description}
+	\item[Method 1] This technique creates a bitstring from one or more physical and non-physical sources. However, for the entropy count, only physical sources will be employed \cite{SP90C-2022}.
+	
+	\underline{Illustration:}\\
+	Assume that $P_{1},P_{2},\cdots,P_{x}$  are the equivalent bitstrings with $EP_{1},EP_{2},$ $\cdots,EP_{x}$  of entropy from the physical sources. The same holds good for non-physical sources $NP_{1},NP_{2},\cdots,NP_{x}$ and $ENP_{1},ENP_{2},$ $\cdots,ENP_{x}$. Then, by concatenating outputs, the final bitstring for instantiation or reseeding are created.
+	\begin{equation*}
+	Bitstring = P_{1}||NP_{1}||NP_{2}||P_{2}||\cdots||P_{x}||NP_{x}
+	\end{equation*}
+	
+	But the total entropy of the bitstring will only consider the entropy from physical sources such as,
+	\begin{equation*}
+	E_{total} = EP_{1} + EP_{2} + \cdots + EP_{x} 
+	\end{equation*}
+	
+	\item[Method 2] This method is like method 1, but entropy from non-physical sources is also considered for calculating the overall entropy of the final bitstring \cite{SP90C-2022}.
+	
+	\underline{Illustration:}\\
+	We will consider the same scenario as in method 1 with  $P_{1},P_{2},\cdots,P_{x}$ as outputs from physical sources with $EP_{1},EP_{2},\cdots,EP_{x}$  as corresponding entropy in the bitstring. $NP_{1},NP_{2},\cdots,NP_{x}$ as bitstring from non-physical sources with  $ENP_{1},ENP_{2},\cdots,ENP_{x}$ as respective entropy. Final bitstring is formed as,
+	\begin{equation*}
+	Bitstring = P_{1}||NP_{1}||NP_{2}||P_{2}||\cdots||P_{x}||NP_{x}
+	\end{equation*}\\
+	And the overall entropy of the final bitstring is
+	\begin{equation*}
+	E_{total} = EP_{1} + ENP_{1} + EP_{2} + ENP_{2} + \cdots +  EP_{x} + ENP_{x}
+	\end{equation*}
+\end{description}
+
+We can conclude from the methods discussed above that methods one and two both form the bitstring with either a non-physical or physical source. However, the overall entropy rate of a bitstring created using method 2 is higher than method 1. In other words, the bitstring formed using method 2 is shorter than method 2. Though method 2 provides a higher entropy rate, method 1 provides the most dependable bitstream.
+
+%
+% Sub-Section: RBG2 Construction 
+%
+\subsection{RBG2 Construction}
+\label{subsec:SoA:RBG2}
+Contrary to RBG1, RBG2 has access to the validated entropy source directly within its security boundary. The entropy source is used to gather the entropy required during the instantiation or reseeding of the DRBG. An optional personalization string or additional input required for the DRBG, as discussed in section \ref{sec:fundamentals:drbg}, can be included in the same boundary or obtained from outside the boundary. Figure \ref{fig:3:3} shows the construction of the RBG2 \cite{SP90C-2022}.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\textwidth]{gfx/diagrams/RBG2_Construction}
+	\caption{RBG2 Construction \cite{SP90C-2022}}
+	\label{fig:3:3}
+\end{figure}
+
+RBG2 can be constructed using one or more physical or non-physical sources. Based on the methods used for the consideration of the entropy, RBG2 can also be classified as two variants RBG2(P) and RBG2(NP) \cite{SP90C-2022}.
+
+\begin{description}
+	\item[RBG2(P)] RBG2(P) creates a bitstring using one or more physical sources and, optionally, one or more non-physical sources. To calculate entropy, however, this version employs method 1. The previous statement implies that only entropy created by verified physical sources is considered for calculating the entropy needed for instantiation or reseeding, as explained in section \ref{subsec:SoA:ECM}.
+	
+	\item[RBG2(NP)] RBG2(NP) employs any verified non-physical or physical sources. This variation counts the required entropy using method 2. As a result, both physical and non-physical sources are given equal weight. Although both physical and non-physical sources are equally important, it is advised to employ the conditioned outputs from non-physical sources since non-physical sources provide output with a low entropy rate.
+\end{description}
+
+The same procedures as in section \ref{sec:fundamentals:drbg} are used for instantiation, reseeding, and generating random numbers from the DRBG in RBG2. However, the quantity of entropy that must be gathered from the source is the main factor to be considered in RBG2. To achieve the needed security strength, additional 128 bits of entropy must be given to the DRBG during instantiation if the RBG2 utilizes CTR\_DRBG (without derivation function). For instance, if s is the required security strength, the sources must provide $s+128$ bits of entropy for CTR\_DRBG (without derivation function). In contrast, $3s/2$ bits of entropy must be gathered and sent to the DRBG during instantiation if any other suggested DRBG is utilized in the build \cite{SP90C-2022}.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\textwidth]{gfx/diagrams/RBG2_Prediction_Resistance}
+	\caption{RBG2 Prediction Resistance Mechanism}
+	\label{fig:3:4}
+\end{figure}
+
+Prediction resistance in RBG2 can be optionally enabled during the instantiation of DRBG. Even if the RBG enables prediction resistance, usage is optional when generating pseudo-random numbers. If the prediction resistance is requested during the generation and RBG supports it, then the DRBG is reseeded during the generation process. Figure \ref{fig:3:4} illustrates the usage of prediction resistance in RBG2.
+
+RBG2 construction might be best suited for applications where security requirements are higher than those provided by RBG1. However, RBG2 is slower than RBG1 as entropy is collected when required.
+
+%
+% Sub-Section: RBG3 Construction 
+%
+\subsection{RBG3 Construction}
+\label{subsec:SoA:RBG3}
+The RBG3 construction is made to output the random numbers with total entropy. Given that RBG3 outputs full-entropy random numbers, entropy sources employed in the construction are anticipated to be validated physical sources that produce full-entropy \cite{SP90C-2022}. In contrast to RBG2, this construction solely uses Method 1 to calculate entropy. RBG3 is always instantiated with the specified 256-bit security strength. As previously stated, RBG3 expects physical sources to provide full-entropy outputs. In any unforeseen circumstances, if a source fails to provide total entropy and goes undetected, the construction will continue to operate normally as RBG2. However, if the source failure is discovered, the RBG will be terminated.
+
+Entropy sources are a component of the RBG3 security boundary, and RBG3 continuously accesses them to obtain the necessary entropy. It is possible to create an implementation so that consuming applications can directly access the DRBG implementation that is utilized in an RBG3 construction. When complete entropy bits or a greater security level than what RBG1 and RBG2 constructions can offer are needed, an RBG3 construction might be beneficial.
+
+According to the method used to produce the random numbers with full entropy, as was explained in section \ref{sec:SoA:NIST}, there are two possible ways to create RBG3.
+
+%
+% Subsub-Section: RBG3(XOR) Construction 
+%
+\subsubsection{RBG3(XOR) Construction}
+\label{subsubsec:SoA:RBG3:XOR}
+A DRBG and one or more certified entropy sources are present in an RBG3(XOR) design. Full-entropy output is created by XORing the outputs of entropy sources and the DRBG. The output of the entropy sources must be converted to a full-entropy bitstring using vetted conditioning functions \ref{table:2:1} before being XORed with the output of the DRBG if the entropy sources cannot deliver full-entropy output \cite{SP90C-2022}. Figure \ref{fig:3:5} describes the construction of RBG3(XOR).
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\textwidth]{gfx/diagrams/RBG3_XOR_Construction}
+	\caption{RBG3(XOR) Construction \cite{SP90C-2022}}
+	\label{fig:3:5}
+\end{figure}
+
+The DRBG is instantiated and reseeded in RBG3(XOR), similarly to RBG2, with the slight exception that the DRBG’s intended strength is always 256. Entropy requirements from the RBG3 construction are identical to those from the RBG2 with $s+128$ for CTR\_DRBG (without differential function) and any other DRBG $3s/2$. 
+
+Generation processes of random numbers include the collection of entropy and XORing with the output of the DRBG to provide full-entropy final output. Figure \ref{fig:3:6} illustrates the generation process of RBG3(XOR).
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\textwidth]{gfx/diagrams/RBG3_XOR_Gen}
+	\caption{RBG3(XOR) Generation Process \cite{SP90C-2022}}
+	\label{fig:3:6}
+\end{figure}
+
+To sum up, RBG3(XOR) construction uses multiple sources for entropy gathering, which are XORed to provide a high degree of diffusion. This scattering of entropy increases the overall quality of random numbers. XOR, the best bit manipulation technique, provides better random distribution even with constant values. However, the difficulty with RBG3(XOR) is the complicated construction and requirement of entropy during every generation process, causing construction to be slower.
+
+%
+% Subsub-Section: RBG3(RS) Construction 
+%
+\subsubsection{RBG3(RS) Construction}
+\label{subsubsec:SoA:RBG3:RS}
+The second RBG3 construction is RBG3(RS). This process continuously reseeds the DRBG and generates the required amount of bits with full security strength iteratively \cite{SP90C-2022}. Figure \ref{fig:3:7} provides insight into RBG3(RS) construction.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.65\textwidth]{gfx/diagrams/RBG3_RS_Construction}
+	\caption{RBG3(RS) Construction}
+	\label{fig:3:7}
+\end{figure}
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{gfx/diagrams/RBG3_RS_Gen}
+	\caption{RBG3(RS) Generation Process}
+	\label{fig:3:8}
+\end{figure}
+
+The instantiation, reseeding, and entropy requirements are identical to those of RBG3(XOR). However, reseeding mechanisms are also a part of the generation process. The generation of random numbers using the RBG3(RS) structure is shown in figure \ref{fig:3:8}. During generating, 128 extra entropy bits must be given if the DRBG utilized is CTR\_DRBG (with or without differential function). On the other hand, 64 bits of extra entropy must be given for hash\_based DRBG.
+
+To summarize RBG3(RS) construction, it uses entropy input during each generation process. Entropy during each generation step provides higher prediction resistance and better security. Nevertheless, it also creates more latency due to the continuous entropy requirements.
+
+%
+% Section: Yarrow Algorithm
+%
+\section{Yarrow Algorithm}
+\label{sec:SoA:YA}
+Yarrow is a cryptographically safe pseudo-random number generator devised by John Kelsey, Bruce Schneier, and Niels Ferguson and published in 1999 \cite{YR-1999}. A vital design principle that makes Yarrow applicable to systems with various design constraints is its components’ more-or-less independent nature. Yarrow’s objective is to maximize the usage of the system’s existing primitives, such as noise sources, to increase security. As a result, the design of Yarrow entirely relies on block cyphers and one-way hash functions.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/Yarrow_Design_Principle}
+	\caption{Yarrow Design Principle \cite{YI-2002}}
+	\label{fig:3:9}
+\end{figure}
+
+The basic design principle of Yarrow is demonstrated in figure 3.8. The Yarrow design concept is a combination of four significant steps.
+
+\begin{description}
+	\item[Entropy Accumulation] In Yarrow, entropy accumulation is divided into two phases: a collection of entropy from the source and pooling. The entropy is gathered from a variety of sources. Estimating the entropy is an essential factor to be considered. Before use, the source is estimated, and samples are categorized according to sources while gathering entropy. Each source’s contribution to entropy is then computed independently.
+	
+	The fast pool and slow pool are the two pools that Yarrow employs. Each pool is a hash context. Samples from the source are kept in different pools in cycles. The fast pool offers frequent key reseeds so that new entropy may be added to the key more quickly. In contrast, a slow pool offers a higher but rarer quantity of entropy.
+	
+	\item[Generation of Pseudo Random Numbers] Figure 3.9 \cite{YR-1999} serves as an illustration of the generation process. Based on the generation process, Yarrow can be described as CTR\_DRBG. An n-bit counter, where n is the length of the block cypher output, serves as the generation process. After each generation cycle, counter “C” is increased. The previous C (counter) is encrypted using key “k”. the key is seeded repeatedly using either a fast pool or a slow pool because, if the key were hacked at any time, it should not leak too many old values or offer too many new values.
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/Yarrow_PRNG}
+		\caption{Generation of Yarrow-based Random Number}
+		\label{fig:3:10}
+	\end{figure}
+	
+	\item[Reseed Mechanism] To make it more difficult for an attacker to guess the block cypher’s key, reseed is used to refresh it. Figure \ref{fig:3:19} demonstrates the reseed technique  \cite{YI-2002}.
+	
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.75\textwidth]{gfx/diagrams/Yarrow_reseed}
+		\caption{Yarrow reseed mechanism \cite{FTI-2006}}
+		\label{fig:3:19}
+	\end{figure}
+	
+	\item[Reseed Control] This process regulates the reseed mechanism’s interval. When a highly secure random number is required, reseeding is either explicitly carried out by the user application or implicitly carried out when the pool hits the threshold entropy level. The fast pool threshold in Yarrow-160 is 100 bits by a single source, and the slow pool threshold is 160 bits. At least two sources should meet this requirement to accomplish reseeding by the slow pool.
+	
+\end{description}
+
+Yarrow is a cryptographic pseudo-random number generator created to produce high-quality random numbers. Producing pseudo-random output combines many entropy sources, a cryptographic mixing technique, and a master seed. Yarrow is flexible and has built-in security features, including prediction resistance and reseeding. Hence, Yarrow is one of the more practical approaches for generating random numbers.
+
+%
+% Section: Fortuna Algorithm
+%
+\section{Fortuna Algorithm}
+\label{sec:SoA:FA}
+The Fortuna algorithm \cite{FT-2011} was developed by John Kelsey, Bruce Schneier, and Niels Ferguson and is based on the enhancements made to the Yarrow algorithm. The fundamental concept of Fortuna is comparable to that of Yarrow and consists of pseudo-random number generation, reseeding, and entropy accumulation with pooling. However, the main issues with the Yarrow technique were the absence of entropy during start-up time and knowing how much entropy to gather before utilizing it to reseed the PRNG. By gathering entropy at random from diverse sources, Fortuna attempts to alleviate these issues by dividing the entropy equally across 32 entropy pools in a round-robin method and employing a seed-file process. The Fortuna algorithm’s core process flow is shown in figure \ref{fig:3:11}.
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{gfx/diagrams/Fortuna_Design_Principle}
+	\caption{Fortuna Design Principle \cite{FTI-2006}}
+	\label{fig:3:11}
+\end{figure}
+
+We will formulate the Fortuna algorithm like the Yarrow algorithm with an additional step describing the \textit{seedfile} management.
+
+\begin{description}
+	\item[Entropy Accumulation] One of the primary distinctions between the Fortuna and Yarrow, when compared to each other, is entropy accumulation and pooling. As previously mentioned, one of the main issues with Yarrow is determining how much entropy to gather before use. Fortuna accumulates the entropy in 32 pools, $Pool_{0}\cdots Pool_{31}$, in a uniform and cyclical manner, correspondingly using random data from various sources. Fortuna permits using 256 entropy sources that may be dynamically or statically labelled. Theoretically, all the pools should have unbound lengths to handle all the random events from outside sources. This unbound length of the pool causes significant memory limitations, which may be resolved by using a hash context in each pool. Figure \ref{fig:3:12} will describe the pooling mechanism.
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.5\textwidth]{gfx/diagrams/Fortuna_Pooling_Concept}
+		\caption{Pooling Mechanism in Fortuna \cite{FTI-2006}}
+		\label{fig:3:12}
+	\end{figure}
+	
+	\item[Reseed Mechanism] How the freshness value is added to the key used in the generation process is determined by the reseed method. The reseeding technique is demonstrated in Figure \ref{fig:3:13}. A 32-bit counter is used as part of the reseed method to choose which pool should be considered. If $2^{i}$ divides the counter value without any remainder, the pool $P_{i}$ will be included in the reseed. As a result, higher numbered pools contribute to reseeding less frequently, but they accumulate more entropy between reseeding.
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.5\textwidth]{gfx/diagrams/Fortuna_Reseed_Mechanism}
+		\caption{Reseed Mechanism in Fortuna}
+		\label{fig:3:13}
+	\end{figure}
+	
+	\item[Reseed Control] This procedure establishes the necessary timing for reseeding. Only when “enough” random data has been added to the pools can the generator be reseeded from them. An optimistic estimate must be made to determine how much data is necessary to declare that “enough” random data has been collected. Additionally, it is advisable to keep the reseed rate to 10 reseeds per second \cite{FT-2011} to ensure that all pools are accumulating a sufficient level of entropy before reseeding.
+	
+	\item[Generation of Pseudo Random Number] Figure \ref{fig:3:14} shows the random number generation method and is similar to Yarrow’s description but comprises a 128-bit counter and a 256-bit key for block cypher encryption of the counter value. As a block cypher, the generating procedure most frequently employs AES256. Two blocks of random numbers are created throughout each generation process to prevent the key value from being predicted and utilized as a key for the following iteration.
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/Fortuna_PRNG}
+		\caption{Generation of Fortuna-based Random Number}
+		\label{fig:3:14}
+	\end{figure}
+	
+	\item[Seed-file Management] When Fortuna is first started, a “seed file” stored in secure memory, as mentioned in \ref{subsec:SoA:RBG1}, gives the generator a seed. This initial seed enables the generator to generate random data before the accumulator accumulates sufficient entropy. A fresh seed is instantly created and written to the seed file when the seed file is read at the start-up. This information produces a higher-quality seed as Fortuna builds up entropy. A fresh seed file is advised to be created every 10 minutes, although this greatly depends on the application and the rate at which entropy is building up.
+\end{description}
+
+To summarize, Fortuna is an extension of Yarrow, providing a higher sense of mixing the entropy into the pool and the usage of entropy from the pool for reseeding. Fortuna also provides the solution for the bootie entropy requirements.
+
+%
+% Section: Linux RNG
+%
+\section{Linux RNG}
+\label{sec:SoA:LRNG}
+The initial implementation of the Linux-RNG(LRNG) was provided in 1994 by Theodore Ts’o \cite{LRNG-2022}. LRNG is one of the most widely used CSPRNGs. The Linux-RNG is a random number generator that uses hardware events detected by the Linux kernel as noise sources to feed a deterministic random number generator. The architecture of LRNG is shown in figure \ref{fig:3:15}.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1\textwidth]{gfx/diagrams/LRNG_Arch}
+	\caption{Linux RNG Architecture \cite{LRNG-2022}}
+	\label{fig:3:15}
+\end{figure}
+
+LRNG architecture or design flow can be explained using the following parts: 
+\begin{description}
+	\item[Aggregation of random data into pools] Entropy sources in LRNG may be considered events the Linux kernel detects. The entropy pool, also known as the input pool in the context of LRNG, is a Blake2s message digest. Blake2s is an optimized hash function based on SHA-3. Any new event will be added to the input pool with the Blake2s update.
+	
+	Pool updating is more complicated in situations when there are interrupt-based events involved. A fast pool is a basic memory structure to which interrupt-based events are added. The fast pool is being managed as a SipHash 1-0 / HalfSipHash (SipHash and HalfSipHash are cryptographic hash functions created for use in hash tables and other applications where performance and security are both vital) utilizing an empty key. One fast pool is present in each CPU core. When the count reaches 64 or if it has been more than one second since the last merge, entropy from the fast pool is merged into the input pool. The Aggregation of the Random Data into the Pools is shown in figure \ref{fig:3:16}.
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/LRNG_Pooling}
+		\caption{Aggregation of the random data into the input pool in LRNG \cite{LRNG-2022}}
+		\label{fig:3:16}
+	\end{figure}
+	
+	The aggregation of random data into pools can be characterized as follows. After the occurrence of a hardware event, such as an interrupt, the event is awarded an entropy estimation by the Linux-RNG. The event time and the event value are hashed into the entropy pool, the Blake2s state.
+	
+	\item[Generation of the Random Numbers] LRNG uses ChaCha20 DRNG to generate the random number. Based on the timing difference between request and generation, requests can be classified as:
+	\begin{itemize}
+		\item Unrestricted generation of random numbers means that random data is created whether the ChaCha20 DRNG or the entropy pool has received enough entropy.
+		\item With blocked generation, random numbers are only produced when the original entropy obtained by the entropy pool or the ChaCha20 DRNG was at least 256 bits. When the 256-entropy bit barrier is achieved, calls to blocked generation behave similarly to unrestricted calls.
+	\end{itemize}
+	
+	The LRNG’s random number generation method may be divided into two steps, as shown in figures \ref{fig:3:17} and \ref{fig:3:18}. 
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/LRNG_EE}
+		\caption{Extraction and Expansion Mechanism \cite{LRNG-2022}}
+		\label{fig:3:17}
+	\end{figure}
+	
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=1\textwidth]{gfx/diagrams/LRNG_Gen}
+		\caption{ChaCha20 DRNG Operation \cite{LRNG-2022}}
+		\label{fig:3:18}
+	\end{figure}
+	
+	\begin{description}
+		\item[Extract and Expand Mechanism] The concatenated output from the input pool and the output of 256 bits from an optionally installed CPU-based random number generator, such as Intel’s RDSEED, are used to create a new key during the extract phase. The Blake2s hash context is reset using the resultant message digest to collect further data from the noise sources. The output of the extract phase is also utilized in the expanding phase, which creates random bits with a 32-byte size that are used as the seed for the ChaCha20 DRNG key.
+		
+		\item[ChaCha20 DRNG] The ChaCha20 DRNG operates by repeatedly invoking the ChaCha20 DRNG block until the requested number of bytes is generated. Hence, the output function of this DRNG is based on the ChaCha20 block operation. The counter value of the state is incremented by one after each ChaCha20 block operation. The fast-key-erasure approach, as specified in \cite{LRNG-2022}, is applied to ensure backtracking resistance.
+	\end{description}
+	
+\end{description}
+
+Every generation checks the reseed status of the key. If it has been more than 60 seconds since the last reseed, the pool is used to reseed the key. Reseeding occurs every (t + t/2) second for the first two minutes following start-up, where n is the number of seconds after the reboot \cite{LRNG-2022}. The frequency of reseeding is set higher during the initial two minutes to compensate for the lower availability of entropy during boot and the chances of boot time seed compromise.
+
+Overall, LinuxRNG is a solid and reliable random number generator widely used in Linux-based systems and applications. It offers a high degree of security and quality for cryptographic applications, and since it can be accessible using industry-standard interfaces, integrating it into a variety of systems and applications is simple.
+
+
+%
+% Section: Chapter Summary
+%
+\section{Chapter Summary}
+\label{sec:SoA:Summary}
+The state-of-the-art (SoA) designs for entropy collection and random number generation have been covered in this chapter. Although the NIST SP 800-90 standard offers a foundation for any architecture, it is often not practicable as limitations in the hardware or not considered. Yarrow and Fortuna offer practical solutions for systems with reliable randomness sources. The most used CSPRNG in many embedded devices is Linux RNG. However, LRNG also anticipates sources to offer random numbers with a high entropy rate. The practical drawbacks of SoA will be discussed in the following chapter, and a workable architecture for automotive ECUs will be designed.
